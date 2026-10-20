@@ -1,0 +1,2 @@
+# minimarket-mass
+yatawtasf
