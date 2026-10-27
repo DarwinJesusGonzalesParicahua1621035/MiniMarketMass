@@ -23,20 +23,44 @@ function mensaje_error(PDOException $ex, string $duplicado, string $conHijos = '
 
 function pagina_inicio(string $titulo): void {
     $f = flash();
-    echo '<!doctype html><html lang="es"><head><meta charset="utf-8">'
-       . '<meta name="viewport" content="width=device-width,initial-scale=1">'
-       . '<title>' . e($titulo) . '</title>'
-       . '<style>body{font-family:system-ui,sans-serif;max-width:960px;margin:20px auto;padding:0 12px}'
-       . 'table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:6px 8px;text-align:left}'
-       . 'th{background:#eee}.ok{background:#e6f4ea;padding:8px}.err{background:#fde8e8;padding:8px}'
-       . 'label{display:block;margin:8px 0 2px}input,select,textarea{padding:6px;width:100%;max-width:360px}'
-       . 'form.inline{display:inline}.inactivo{color:#888}</style></head><body>'
-       . '<nav><a href="productos.php?m=productos">Productos</a> | '
-       . '<a href="productos.php?m=categorias">Categorías</a> | '
-       . '<a href="productos.php?m=caja">Cajas</a> | '
-       . '<a href="productos.php?m=historia_caja">Historial de caja</a> | '
-       . '<a href="productos.php?m=incidentes">Incidentes</a></nav>';
-    if ($f) echo '<p class="' . ($f[0] === 'ok' ? 'ok' : 'err') . '">' . e($f[1]) . '</p>';
+    $m = $_GET['m'] ?? 'productos';
+    $subtitulos = [
+        'productos' => 'Inventario · Gestión de productos',
+        'categorias' => 'Inventario · Gestión de categorías',
+        'caja' => 'Operaciones · Administración de cajas',
+        'historia_caja' => 'Operaciones · Aperturas y cierres',
+        'incidentes' => 'Operaciones · Seguimiento de incidentes',
+    ];
+    $sub = $subtitulos[$m] ?? 'Minimarket Mass · Panel de administración';
+    ?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><?= e($titulo) ?> · Tiendas Mass</title>
+<link rel="stylesheet" href="assets/admin.css">
+</head>
+<body>
+<aside id="aside">
+  <div class="logo"><i>M</i><div>Tiendas Mass<small>PANEL ADMIN</small></div></div>
+  <nav>
+    <h6>Inventario</h6>
+    <a href="productos.php?m=productos" class="<?= $m === 'productos' ? 'on' : '' ?>"><span>📦</span>Productos</a>
+    <a href="productos.php?m=categorias" class="<?= $m === 'categorias' ? 'on' : '' ?>"><span>🏷️</span>Categorías</a>
+    <h6>Operaciones</h6>
+    <a href="productos.php?m=caja" class="<?= $m === 'caja' ? 'on' : '' ?>"><span>💵</span>Cajas</a>
+    <a href="productos.php?m=historia_caja" class="<?= $m === 'historia_caja' ? 'on' : '' ?>"><span>📋</span>Historial de caja</a>
+    <a href="productos.php?m=incidentes" class="<?= $m === 'incidentes' ? 'on' : '' ?>"><span>⚠️</span>Incidentes</a>
+  </nav>
+</aside>
+<main>
+  <header>
+    <button id="menu" type="button" onclick="document.getElementById('aside').classList.toggle('open')">☰</button>
+    <h1><?= e($titulo) ?><small><?= e($sub) ?></small></h1>
+  </header>
+  <?php if ($f): ?><div class="alert <?= $f[0] === 'ok' ? 'ok' : 'err' ?>"><?= e($f[1]) ?></div><?php endif; ?>
+<?php
 }
 
-function pagina_fin(): void { echo '</body></html>'; }
+function pagina_fin(): void { echo "</main>\n</body>\n</html>"; }

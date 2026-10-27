@@ -16,6 +16,7 @@ require __DIR__ . '/../controllers/CajaController.php';
 require __DIR__ . '/../controllers/HistoriaCajaController.php';
 require __DIR__ . '/../controllers/IncidenteController.php';
 
+// Si en esta PC MySQL usa el puerto 3306, cambia port=3307 por port=3306.
 $db = new PDO(
     'mysql:host=127.0.0.1;port=3307;dbname=minimarket_mass;charset=utf8mb4',
     'root',
