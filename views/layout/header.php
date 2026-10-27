@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tiendas Mass · Panel de administración</title>
+<title><?= isset($pageTitle) ? htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') . ' · ' : '' ?>Tiendas Mass · Panel de administración</title>
 <!-- Aquí pega TODO el bloque de <style> de tu HTML original -->
 <style>
 /* ... (Copia los estilos CSS del archivo HTML) ... */
@@ -19,6 +19,8 @@
     <h6>Operaciones</h6>
     <a href="/ventas">🧾 Ventas</a>
     <a href="/caja">💵 Cajas</a>
+    <a href="/historia-caja">📋 Historial de caja</a>
+    <a href="/incidentes">⚠️ Incidentes</a>
     <h6>Inventario</h6>
     <a href="/productos">📦 Productos</a>
     <a href="/stock">🗃️ Stock</a>
@@ -30,7 +32,7 @@
 <main>
   <header>
     <button id="menu" onclick="aside.classList.toggle('open')">☰</button>
-    <h1 id="title">Panel de Control</h1>
+    <h1 id="title"><?= isset($pageTitle) ? htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') : 'Panel de Control' ?></h1>
     <a href="/logout" class="btn g" style="text-decoration:none;">Salir</a>
   </header>
   <div id="view">

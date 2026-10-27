@@ -23,6 +23,14 @@ $router->get('/productos', 'ProductoController@index'); // Jhon
 $router->get('/stock', 'StockController@index');       // Bryan
 $router->get('/ventas', 'VentaController@index');      // Anthony
 $router->get('/caja', 'CajaController@index');         // Jean
+$router->post('/caja/guardar', 'CajaController@save');
+$router->post('/caja/eliminar', 'CajaController@delete');
+$router->get('/historia-caja', 'HistoriaCajaController@index');
+$router->post('/historia-caja/abrir', 'HistoriaCajaController@open');
+$router->post('/historia-caja/cerrar', 'HistoriaCajaController@close');
+$router->get('/incidentes', 'IncidenteController@index');
+$router->post('/incidentes/crear', 'IncidenteController@create');
+$router->post('/incidentes/estado', 'IncidenteController@updateState');
 $router->get('/clientes', 'ClienteController@index');  // Franzua
 
 $router->run($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);

@@ -113,3 +113,9 @@ Pendiente: el motivo de cada decisión no está documentado. Lo que se observa e
 | Pagos en tabla aparte (`PAGO_VENTA`), con varios por venta posibles. | Pendiente |
 | Supervisor como relación del empleado consigo mismo (`SUPERVISOR_ID`). | Pendiente |
 | `ACTIVO` en empleados y productos en lugar de eliminar registros. | Pendiente |
+
+## Módulos de caja e incidentes
+
+- `/caja`: administrar cajas por sucursal; las cajas con historial no se pueden mover a otra sucursal ni eliminar.
+- `/historia-caja`: registrar aperturas y cierres con empleado responsable, y filtrar el historial por estado.
+- `/incidentes`: registrar incidentes por sucursal y resolverlos o reabrirlos.
