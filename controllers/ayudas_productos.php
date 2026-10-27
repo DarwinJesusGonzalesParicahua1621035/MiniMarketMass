@@ -29,10 +29,13 @@ function pagina_inicio(string $titulo): void {
        . '<style>body{font-family:system-ui,sans-serif;max-width:960px;margin:20px auto;padding:0 12px}'
        . 'table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:6px 8px;text-align:left}'
        . 'th{background:#eee}.ok{background:#e6f4ea;padding:8px}.err{background:#fde8e8;padding:8px}'
-       . 'label{display:block;margin:8px 0 2px}input,select{padding:6px;width:100%;max-width:360px}'
+       . 'label{display:block;margin:8px 0 2px}input,select,textarea{padding:6px;width:100%;max-width:360px}'
        . 'form.inline{display:inline}.inactivo{color:#888}</style></head><body>'
        . '<nav><a href="productos.php?m=productos">Productos</a> | '
-       . '<a href="productos.php?m=categorias">Categorías</a></nav>';
+       . '<a href="productos.php?m=categorias">Categorías</a> | '
+       . '<a href="productos.php?m=caja">Cajas</a> | '
+       . '<a href="productos.php?m=historia_caja">Historial de caja</a> | '
+       . '<a href="productos.php?m=incidentes">Incidentes</a></nav>';
     if ($f) echo '<p class="' . ($f[0] === 'ok' ? 'ok' : 'err') . '">' . e($f[1]) . '</p>';
 }
 

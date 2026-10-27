@@ -113,3 +113,13 @@ Pendiente: el motivo de cada decisión no está documentado. Lo que se observa e
 | Pagos en tabla aparte (`PAGO_VENTA`), con varios por venta posibles. | Pendiente |
 | Supervisor como relación del empleado consigo mismo (`SUPERVISOR_ID`). | Pendiente |
 | `ACTIVO` en empleados y productos en lugar de eliminar registros. | Pendiente |
+
+## Módulos web
+
+La aplicación de prueba se sirve desde `public/productos.php` y comparte la conexión local a MySQL configurada allí.
+
+| Módulo | Ruta | Funcionalidad |
+|---|---|---|
+| Cajas | `?m=caja` | Registrar, editar y eliminar cajas por sucursal. |
+| Historial de caja | `?m=historia_caja` | Abrir y cerrar cajas, consultar aperturas y filtrar por estado. Cada caja admite una sola apertura vigente. |
+| Incidentes | `?m=incidentes` | Registrar incidentes por sucursal, filtrar y marcar como resueltos o reabrirlos. |
