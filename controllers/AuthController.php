@@ -5,15 +5,15 @@ class AuthController extends Controller
 
     public function login(): void
     {
-        if (Auth::user()) {
-            $this->redirect('dashboard/index');
+        if ($u = Auth::user()) {
+            $this->redirect(Auth::inicio($u['rol']));
         }
         $error = null;
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (Auth::login(trim($_POST['usuario'] ?? ''), $_POST['clave'] ?? '')) {
-                $this->redirect('dashboard/index');
+                $this->redirect(Auth::inicio(Auth::user()['rol']));
             }
-            $error = 'Usuario o clave incorrectos, o sin acceso de administrador.';
+            $error = 'Usuario o clave incorrectos, o sin acceso al sistema.';
         }
         $this->render('auth/login', ['error' => $error], false);
     }

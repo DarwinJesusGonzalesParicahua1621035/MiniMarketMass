@@ -2,11 +2,18 @@
 abstract class Controller
 {
     protected bool $publico = false;
+    protected array $roles = ['ADMINISTRADOR'];
 
     public function __construct()
     {
-        if (!$this->publico && !Auth::user()) {
-            $this->redirect('auth/login');
+        if (!$this->publico) {
+            $u = Auth::user();
+            if (!$u) {
+                $this->redirect('auth/login');
+            }
+            if (!in_array($u['rol'], $this->roles, true)) {
+                $this->redirect(Auth::inicio($u['rol']));
+            }
         }
         if ($_SERVER['REQUEST_METHOD'] === 'POST'
             && !hash_equals($_SESSION['csrf'] ?? '', $_POST['csrf'] ?? '')) {
@@ -50,7 +57,7 @@ abstract class Controller
         ob_start();
         require ROOT . "/views/$vista.php";
         $contenido = ob_get_clean();
-        if ($layout) {
+                if ($layout) {
             require ROOT . '/views/layout/main.php';
         } else {
             echo $contenido;
