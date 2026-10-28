@@ -1,61 +1,49 @@
 <?php
-declare(strict_types=1);
-
-require_once __DIR__ . '/../Caja.php';
-
-/**
- * Acceso a datos de la tabla caja.
- *
- * FERNANDEZ CHAUCAYANQUI JEAN MICHEL
- */
-class CajaRepository
+class CajaRepository extends Repository
 {
-    public function __construct(private PDO $pdo) {}
+    protected string $tabla = 'caja';
+    protected string $listaSql = 'SELECT c.id, c.sucursal_id, s.nombre AS sucursal, c.nombre
+        FROM caja c JOIN sucursal s ON s.id = c.sucursal_id ORDER BY s.nombre, c.nombre';
 
-    public function listarPorSucursal(int $sucursalId): array
+    // Cajas con su turno abierto (si lo tiene).
+    public function conTurno(?int $sucursalId = null): array
     {
-        $stmt = $this->pdo->prepare(
-            'SELECT id, sucursal_id, nombre FROM caja WHERE sucursal_id = :sucursal_id ORDER BY nombre'
-        );
-        $stmt->execute(['sucursal_id' => $sucursalId]);
-
-        $cajas = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $cajas[] = $this->mapear($row);
-        }
-        return $cajas;
+        $sql = "SELECT c.id, s.nombre AS sucursal, c.nombre,
+                h.id AS historia_id, h.apertura, h.monto_inicial, e.nombre AS empleado
+                FROM caja c
+                JOIN sucursal s ON s.id = c.sucursal_id
+                LEFT JOIN historia_caja h ON h.caja_id = c.id AND h.estado = 'ABIERTA'
+                LEFT JOIN empleado e ON e.id = h.empleado_id "
+             . ($sucursalId ? 'WHERE c.sucursal_id = ? ' : '')
+             . 'ORDER BY s.nombre, c.nombre';
+        $s = $this->db()->prepare($sql);
+        $s->execute($sucursalId ? [$sucursalId] : []);
+        return $s->fetchAll();
     }
 
-    public function buscarPorId(int $id): ?Caja
+    // Cajas sin turno abierto, para el formulario de apertura.
+    public function libres(): array
     {
-        $stmt = $this->pdo->prepare(
-            'SELECT id, sucursal_id, nombre FROM caja WHERE id = :id'
-        );
-        $stmt->execute(['id' => $id]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        return $row ? $this->mapear($row) : null;
+        $o = [];
+        $q = "SELECT c.id, CONCAT(s.nombre, ' · ', c.nombre) AS texto
+              FROM caja c JOIN sucursal s ON s.id = c.sucursal_id
+              WHERE NOT EXISTS (SELECT 1 FROM historia_caja h WHERE h.caja_id = c.id AND h.estado = 'ABIERTA')
+              ORDER BY s.nombre, c.nombre";
+        foreach ($this->db()->query($q) as $r) {
+            $o[$r['id']] = $r['texto'];
+        }
+        return $o;
     }
 
     public function crear(int $sucursalId, string $nombre): int
     {
-        $stmt = $this->pdo->prepare(
-            'INSERT INTO caja (sucursal_id, nombre) VALUES (:sucursal_id, :nombre)'
-        );
-        $stmt->execute([
-            'sucursal_id' => $sucursalId,
-            'nombre'      => $nombre,
-        ]);
-
-        return (int) $this->pdo->lastInsertId();
-    }
-
-    private function mapear(array $row): Caja
-    {
-        return new Caja(
-            (int) $row['id'],
-            (int) $row['sucursal_id'],
-            $row['nombre']
-        );
+        $nombre = trim($nombre);
+        if ($sucursalId <= 0) {
+            throw new InvalidArgumentException('elige una sucursal.');
+        }
+        if ($nombre === '' || mb_strlen($nombre) > 40) {
+            throw new InvalidArgumentException('el nombre es obligatorio y tiene máximo 40 caracteres.');
+        }
+        return $this->insertar(['sucursal_id' => $sucursalId, 'nombre' => $nombre]);
     }
 }

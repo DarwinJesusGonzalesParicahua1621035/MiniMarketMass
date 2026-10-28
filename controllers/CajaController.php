@@ -1,66 +1,121 @@
 <?php
-declare(strict_types=1);
-
-require_once __DIR__ . '/../models/repositories/CajaRepository.php';
-require_once __DIR__ . '/../models/repositories/HistoriaCajaRepository.php';
-
-/**
- * Controlador del módulo Caja (cajas + aperturas/cierres).
- *
- * FERNANDEZ CHAUCAYANQUI JEAN MICHEL
- */
-class CajaController
+class CajaController extends Controller
 {
-    private CajaRepository $cajas;
-    private HistoriaCajaRepository $historias;
+    protected array $roles = ['ADMINISTRADOR', 'CAJERO'];
 
-    public function __construct(PDO $pdo)
+    public function index(): void
     {
-        $this->cajas     = new CajaRepository($pdo);
-        $this->historias = new HistoriaCajaRepository($pdo);
+        $r = new CajaRepository();
+        $sucursal = (int)($_GET['sucursal'] ?? 0) ?: null;
+        $this->render('caja/index', [
+            'titulo'      => 'Cajas',
+            'filas'       => $r->conTurno($sucursal),
+            'sucursales'  => $r->pares('SELECT id, nombre FROM sucursal ORDER BY nombre'),
+            'sucursalSel' => $sucursal,
+            'esAdmin'     => Auth::user()['rol'] === 'ADMINISTRADOR',
+        ]);
     }
 
-    /** Lista las cajas de una sucursal y si tienen apertura abierta. */
-    public function index(int $sucursalId): void
+    public function historial(): void
     {
-        $cajas = $this->cajas->listarPorSucursal($sucursalId);
-        $estado = [];
-        foreach ($cajas as $caja) {
-            $estado[$caja->getId()] = $this->historias->abiertaDeCaja($caja->getId());
+        $estado = strtoupper(trim($_GET['estado'] ?? ''));
+        if (!in_array($estado, ['ABIERTA', 'CERRADA'], true)) {
+            $estado = null;
         }
-
-        require __DIR__ . '/../views/caja/index.php';
+        $this->render('caja/historial', [
+            'titulo'    => 'Historial de caja',
+            'filas'     => (new HistoriaCajaRepository())->historial($estado),
+            'estadoSel' => $estado,
+        ]);
     }
 
-    /** Formulario / acción de apertura de caja. */
-    public function abrir(int $cajaId, int $empleadoId, float $montoInicial): void
+    public function nueva(): void
     {
-        try {
-            $id = $this->historias->abrir($cajaId, $empleadoId, $montoInicial);
-            $mensaje = "Caja abierta correctamente (historia #{$id}).";
-            $error = null;
-        } catch (Throwable $e) {
-            $mensaje = null;
-            $error = $e->getMessage();
+        if (Auth::user()['rol'] !== 'ADMINISTRADOR') {
+            $this->flash('Solo un administrador puede crear cajas', 'err');
+            $this->redirect('caja/index');
         }
-
-        require __DIR__ . '/../views/caja/abrir.php';
+        $r = new CajaRepository();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $r->crear((int)($_POST['sucursal_id'] ?? 0), (string)($_POST['nombre'] ?? ''));
+                $this->flash('Caja creada');
+                $this->redirect('caja/index');
+            } catch (InvalidArgumentException | RuntimeException | PDOException $e) {
+                $this->guardarOld(['sucursal_id', 'nombre']);
+                $this->flash('No se pudo crear: ' . $this->mensaje($e), 'err');
+                $this->redirect('caja/nueva');
+            }
+        }
+        $this->render('caja/nueva', [
+            'titulo'     => 'Nueva caja',
+            'sucursales' => $r->pares('SELECT id, nombre FROM sucursal ORDER BY nombre'),
+            'old'        => $this->tomarOld(),
+        ]);
     }
 
-    /** Formulario / acción de cierre de caja. */
-    public function cerrar(int $historiaId, float $montoFinal): void
+    public function abrir(): void
     {
-        try {
-            $this->historias->cerrar($historiaId, $montoFinal);
-            $historia = $this->historias->buscarPorId($historiaId);
-            $mensaje = 'Caja cerrada correctamente.';
-            $error = null;
-        } catch (Throwable $e) {
-            $historia = null;
-            $mensaje = null;
-            $error = $e->getMessage();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                (new HistoriaCajaRepository())->abrir(
+                    (int)($_POST['caja_id'] ?? 0),
+                    (int)Auth::user()['id'],
+                    (string)($_POST['monto_inicial'] ?? '')
+                );
+                $this->flash('Caja abierta');
+                $this->redirect('caja/index');
+            } catch (InvalidArgumentException | RuntimeException | PDOException $e) {
+                $this->guardarOld(['caja_id', 'monto_inicial']);
+                $this->flash('No se pudo abrir: ' . $this->mensaje($e), 'err');
+                $this->redirect('caja/abrir');
+            }
         }
+        $this->render('caja/abrir', [
+            'titulo'  => 'Abrir caja',
+            'cajas'   => (new CajaRepository())->libres(),
+            'cajaSel' => (int)($_GET['id'] ?? 0),
+            'old'     => $this->tomarOld(),
+        ]);
+    }
 
-        require __DIR__ . '/../views/caja/cerrar.php';
+    public function cerrar(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                (new HistoriaCajaRepository())->cerrar(
+                    (int)($_POST['historia_id'] ?? 0),
+                    (string)($_POST['monto_final'] ?? '')
+                );
+                $this->flash('Caja cerrada');
+                $this->redirect('caja/historial');
+            } catch (InvalidArgumentException | RuntimeException | PDOException $e) {
+                $this->guardarOld(['historia_id', 'monto_final']);
+                $this->flash('No se pudo cerrar: ' . $this->mensaje($e), 'err');
+                $this->redirect('caja/cerrar');
+            }
+        }
+        $this->render('caja/cerrar', [
+            'titulo'    => 'Cerrar caja',
+            'turnos'    => (new HistoriaCajaRepository())->abiertas(),
+            'turnoSel'  => (int)($_GET['id'] ?? 0),
+            'old'       => $this->tomarOld(),
+        ]);
+    }
+
+    // Datos escritos antes de un error (se muestran una sola vez).
+    private function guardarOld(array $campos): void
+    {
+        $_SESSION['caja_old'] = [];
+        foreach ($campos as $c) {
+            $_SESSION['caja_old'][$c] = (string)($_POST[$c] ?? '');
+        }
+    }
+
+    private function tomarOld(): array
+    {
+        $old = $_SESSION['caja_old'] ?? [];
+        unset($_SESSION['caja_old']);
+        return $old;
     }
 }
