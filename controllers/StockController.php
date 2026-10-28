@@ -36,9 +36,13 @@ class StockController extends Controller
     public function registrar(): void
     {
         $r = new StockRepository();
+        // Datos escritos antes de un error (se muestran una sola vez).
+        $old = $_SESSION['stock_old'] ?? [];
+        unset($_SESSION['stock_old']);
         $this->render('stock/registrar', [
             'titulo' => 'Registrar movimiento',
             'combos' => $r->combinaciones(),
+            'old'    => $old,
         ]);
     }
 
@@ -58,6 +62,12 @@ class StockController extends Controller
             $this->flash('Movimiento registrado');
             $this->redirect('stock/movimientos');
         } catch (InvalidArgumentException | RuntimeException | PDOException $e) {
+            $_SESSION['stock_old'] = [
+                'stock'    => (string)($_POST['stock'] ?? ''),
+                'tipo'     => (string)($_POST['tipo'] ?? ''),
+                'cantidad' => (string)($_POST['cantidad'] ?? ''),
+                'motivo'   => (string)($_POST['motivo'] ?? ''),
+            ];
             $this->flash('No se pudo registrar: ' . $this->mensaje($e), 'err');
             $this->redirect('stock/registrar');
         }
