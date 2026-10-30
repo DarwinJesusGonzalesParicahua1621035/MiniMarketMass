@@ -1,28 +1,23 @@
 <?php
-// public/index.php
+define('ROOT', dirname(__DIR__));
+date_default_timezone_set('America/Lima');
 session_start();
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../core/Router.php';
-require_once __DIR__ . '/../core/Auth.php';
+require ROOT . '/core/helpers.php';
 
-// Autenticación básica (Darwin)
-if (!Auth::check() && $_SERVER['REQUEST_URI'] !== '/login') {
-    header('Location: /login');
-    exit;
+spl_autoload_register(function ($c) {
+    foreach (['core', 'controllers', 'models/repositories', 'models'] as $d) {
+        $f = ROOT . "/$d/$c.php";
+        if (is_file($f)) {
+            require $f;
+            return;
+        }
+    }
+});
+
+try {
+    Router::run();
+} catch (PDOException $e) {
+    http_response_code(500);
+    echo '<h2>Error de base de datos</h2><p>' . e($e->getMessage()) . '</p>'
+       . '<p>Revisa <code>config/config.php</code>, que MySQL esté activo en Laragon y que hayas cargado schema.sql y datos.sql.</p>';
 }
-
-$router = new Router();
-// Rutas base para que el equipo trabaje
-$router->get('/', 'DashboardController@index');
-$router->get('/login', 'AuthController@showLogin');
-$router->post('/login', 'AuthController@login');
-$router->get('/logout', 'AuthController@logout');
-
-// Rutas de los módulos del equipo (ellos las expandirán)
-$router->get('/productos', 'ProductoController@index'); // Jhon
-$router->get('/stock', 'StockController@index');       // Bryan
-$router->get('/ventas', 'VentaController@index');      // Anthony
-$router->get('/caja', 'CajaController@index');         // Jean
-$router->get('/clientes', 'ClienteController@index');  // Franzua
-
-$router->run($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);

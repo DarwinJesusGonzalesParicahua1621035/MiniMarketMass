@@ -1,12 +1,17 @@
 <?php
 /** @var array $asistencias @var array $empleados @var string $q @var ?array $aviso */
+$asistencias = $asistencias ?? [];
+$empleados   = $empleados ?? [];
+$q           = $q ?? '';
+$aviso       = $aviso ?? null;
+ 
 $etiquetas = ['PRESENTE' => 'ok', 'TARDANZA' => 'y', 'FALTA' => 'bad']; // mismos colores del HTML
 $paraInput = fn(?string $f) => $f ? str_replace(' ', 'T', substr($f, 0, 16)) : '';
 ?>
-<?php if ($aviso): ?>
+<?php if (!empty($aviso)): ?>
   <p class="tag <?= $aviso[0] === 'ok' ? 'ok' : 'bad' ?>" style="margin-bottom:14px"><?= Ayuda::e($aviso[1]) ?></p>
 <?php endif; ?>
-
+ 
 <div class="tw">
   <div class="tools">
     <h3>Asistencia <span class="tag b"><?= count($asistencias) ?></span></h3>
@@ -34,7 +39,7 @@ $paraInput = fn(?string $f) => $f ? str_replace(' ', 'T', substr($f, 0, 16)) : '
         <tr>
           <td><?= (int) $a['id'] ?></td>
           <td><?= Ayuda::e($a['empleado']) ?></td>
-          <td><?= Ayuda::e(substr($a['entrada'], 0, 16)) ?></td>
+          <td><?= $a['entrada'] ? Ayuda::e(substr($a['entrada'], 0, 16)) : '—' ?></td>
           <td><?= $a['salida'] ? Ayuda::e(substr($a['salida'], 0, 16)) : '—' ?></td>
           <td><span class="tag <?= $etiquetas[$a['estado']] ?? '' ?>"><?= Ayuda::e($a['estado']) ?></span></td>
           <td>
@@ -54,7 +59,7 @@ $paraInput = fn(?string $f) => $f ? str_replace(' ', 'T', substr($f, 0, 16)) : '
     <?php if (!$asistencias): ?><div class="empty">Sin resultados</div><?php endif; ?>
   </div>
 </div>
-
+ 
 <div class="modal" id="modal-asi">
   <form method="post" action="?m=asistencia&a=guardar" id="form-asi">
     <h3 id="asi-titulo">Nuevo registro · Asistencia</h3>
@@ -83,7 +88,7 @@ $paraInput = fn(?string $f) => $f ? str_replace(' ', 'T', substr($f, 0, 16)) : '
     </div>
   </form>
 </div>
-
+ 
 <script>
 const modalAsi = document.getElementById('modal-asi');
 function cerrarAsi() { modalAsi.classList.remove('on'); }
@@ -104,3 +109,4 @@ function editarAsi(a) {
 }
 modalAsi.addEventListener('click', e => { if (e.target === modalAsi) cerrarAsi(); });
 </script>
+ 

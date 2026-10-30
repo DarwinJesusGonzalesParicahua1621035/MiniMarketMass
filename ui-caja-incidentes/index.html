@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Caja e Incidentes · Tiendas Mass</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <div class="brand">
+        <span class="mark">M</span>
+        <div>
+          <strong>Tiendas Mass</strong>
+          <small>Caja e Incidentes</small>
+        </div>
+      </div>
+      <nav>
+        <p class="nav-label">Operaciones</p>
+        <button type="button" data-view="cajas" class="nav-btn on">Cajas</button>
+        <button type="button" data-view="historial" class="nav-btn">Historial</button>
+        <button type="button" data-view="abrir" class="nav-btn">Abrir turno</button>
+        <button type="button" data-view="cerrar" class="nav-btn">Cerrar turno</button>
+        <button type="button" data-view="nueva" class="nav-btn">Nueva caja</button>
+        <p class="nav-label">Configuración</p>
+        <button type="button" data-view="incidentes" class="nav-btn">Incidentes</button>
+        <button type="button" data-view="incidente-form" class="nav-btn">Nuevo incidente</button>
+      </nav>
+      <div class="credit">
+        <span>Módulo Jean</span>
+        <b>FERNANDEZ CHAUCAYANQUI JEAN MICHEL</b>
+      </div>
+    </aside>
+
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow" id="eyebrow">Operaciones</p>
+          <h1 id="titulo">Cajas</h1>
+        </div>
+        <div class="header-meta">
+          <span class="pill" id="pill-estado">Demo local</span>
+          <button type="button" class="btn ghost" id="btn-reset" title="Restaurar datos de ejemplo">Reset</button>
+        </div>
+      </header>
+
+      <div id="flash" class="flash hidden"></div>
+      <section id="vista"></section>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
