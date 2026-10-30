@@ -4,7 +4,7 @@
 
 class Ayuda
 {
-    public static function e($valor): string
+    public static function e(mixed $valor): string
     {
         return htmlspecialchars((string) $valor, ENT_QUOTES, 'UTF-8');
     }

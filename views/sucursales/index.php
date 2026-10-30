@@ -1,8 +1,14 @@
 <?php
-/** @var array $sucursales @var array $distritos @var string $q @var ?array $aviso */
+/** 
+ * @var array $sucursales 
+ * @var array $distritos 
+ * @var string $q 
+ * @var ?array $aviso 
+ * @var Ayuda $ayudaAlias 
+ */
 ?>
 <?php if ($aviso): ?>
-  <p class="tag <?= $aviso[0] === 'ok' ? 'ok' : 'bad' ?>" style="margin-bottom:14px"><?= Ayuda::e($aviso[1]) ?></p>
+  <p class="tag <?= $aviso[0] === 'ok' ? 'ok' : 'bad' ?>" style="margin-bottom:14px"><?= \Ayuda::e($aviso[1]) ?></p>
 <?php endif; ?>
 
 <div class="tw">
@@ -10,7 +16,7 @@
     <h3>Sucursales <span class="tag b"><?= count($sucursales) ?></span></h3>
     <form method="get" style="display:contents">
       <input type="hidden" name="m" value="sucursales">
-      <input class="search" name="q" placeholder="Buscar…" value="<?= Ayuda::e($q) ?>">
+      <input class="search" name="q" placeholder="Buscar…" value="<?= \Ayuda::e($q) ?>">
     </form>
     <button type="button" class="btn y" onclick="abrirSuc()">+ Nuevo</button>
   </div>
@@ -23,17 +29,17 @@
       <?php foreach ($sucursales as $s): ?>
         <tr>
           <td><?= (int) $s['id'] ?></td>
-          <td><?= Ayuda::e($s['nombre']) ?></td>
-          <td><?= Ayuda::e($s['direccion']) ?></td>
-          <td><?= Ayuda::e($s['distrito']) ?></td>
-          <td><?= Ayuda::e($s['serie_boleta']) ?></td>
-          <td><?= Ayuda::e($s['serie_factura']) ?></td>
+          <td><?= \Ayuda::e($s['nombre']) ?></td>
+          <td><?= \Ayuda::e($s['direccion']) ?></td>
+          <td><?= \Ayuda::e($s['distrito']) ?></td>
+          <td><?= \Ayuda::e($s['serie_boleta']) ?></td>
+          <td><?= \Ayuda::e($s['serie_factura']) ?></td>
           <td>
             <button type="button" class="act" title="Editar"
-              onclick='editarSuc(<?= json_encode($s, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_TAG | JSON_HEX_AMP) ?>)'>✏️</button>
+              onclick='editarSuc(<?= \Ayuda::e(json_encode($s, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_TAG | JSON_HEX_AMP)) ?>)'>✏️</button>
             <form method="post" action="?m=sucursales&a=eliminar" style="display:inline"
                   onsubmit="return confirm('¿Eliminar esta sucursal?')">
-              <input type="hidden" name="csrf" value="<?= Ayuda::e(Ayuda::token()) ?>">
+              <input type="hidden" name="csrf" value="<?= \Ayuda::e(\Ayuda::token()) ?>">
               <input type="hidden" name="id" value="<?= (int) $s['id'] ?>">
               <button class="act" title="Eliminar">🗑️</button>
             </form>
@@ -49,7 +55,7 @@
 <div class="modal" id="modal-suc">
   <form method="post" action="?m=sucursales&a=guardar" id="form-suc">
     <h3 id="suc-titulo">Nuevo registro · Sucursales</h3>
-    <input type="hidden" name="csrf" value="<?= Ayuda::e(Ayuda::token()) ?>">
+    <input type="hidden" name="csrf" value="<?= \Ayuda::e(\Ayuda::token()) ?>">
     <input type="hidden" name="id" id="suc-id">
     <label>Nombre</label>
     <input name="nombre" id="suc-nombre" maxlength="80" required>
@@ -59,7 +65,7 @@
     <select name="distrito_id" id="suc-distrito" class="sel" style="width:100%" required>
       <option value="">Seleccione…</option>
       <?php foreach ($distritos as $d): ?>
-        <option value="<?= (int) $d['id'] ?>"><?= Ayuda::e($d['nombre']) ?></option>
+        <option value="<?= (int) $d['id'] ?>"><?= \Ayuda::e($d['nombre']) ?></option>
       <?php endforeach; ?>
     </select>
     <label>Serie boleta</label>
