@@ -5,6 +5,12 @@ class CajeroController extends Controller
 
     public function index(): void
     {
-        $this->render('cajero/index', ['titulo' => 'Caja'], false);
+        $s = Database::pdo()->prepare(
+            'SELECT s.nombre FROM empleado e JOIN sucursal s ON s.id = e.sucursal_id WHERE e.id = ?'
+        );
+        $s->execute([Auth::user()['id']]);
+        $sucursal = $s->fetchColumn() ?: '';
+
+        $this->render('cajero/index', ['titulo' => 'Caja', 'sucursal' => $sucursal], false);
     }
 }
