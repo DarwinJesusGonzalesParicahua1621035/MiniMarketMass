@@ -15,8 +15,14 @@ class DashboardController extends Controller
             $semana[] = [$dias[date('w', $t)], $map[date('Y-m-d', $t)] ?? 0];
         }
         $this->render('dashboard/index', [
-            'titulo' => 'Resumen del día', 'k' => $r->kpis(), 'semana' => $semana,
-            'medios' => $r->medios(), 'ultimas' => $r->ultimas(),
+            'titulo'     => 'Resumen del día',
+            'k'          => $r->kpis(),
+            'semana'     => $semana,
+            'medios'     => $r->medios(),
+            'ultimas'    => $r->ultimas(),
+            'stockBajo'  => $r->stockBajo(),
+            'incidentes' => $r->incidentesAbiertos(),
+            'top'        => $r->masVendidos(),
         ]);
     }
 }
