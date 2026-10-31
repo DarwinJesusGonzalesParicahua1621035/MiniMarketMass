@@ -132,14 +132,21 @@ class PosRepository extends Repository
                 throw new InvalidArgumentException('El total de la venta debe ser mayor que 0.');
             }
 
-            // Pagos: el vuelto solo puede salir del efectivo recibido.
+            // Pagos: uno o dos medios distintos; el vuelto solo puede salir del efectivo recibido.
+            $recibidos = (array)($d['pagos'] ?? []);
+            if (count($recibidos) > 2) {
+                throw new InvalidArgumentException('Máximo dos métodos de pago por venta.');
+            }
             $pagos = [];
             $recibidoC = 0;
             $efectivoC = 0;
-            foreach ((array)($d['pagos'] ?? []) as $p) {
+            foreach ($recibidos as $p) {
                 $m = strtoupper((string)($p['m'] ?? ''));
                 if (!in_array($m, ['EFECTIVO', 'YAPE', 'PLIN', 'TARJETA'], true)) {
                     throw new InvalidArgumentException('Medio de pago inválido.');
+                }
+                if (in_array($m, array_column($pagos, 'm'), true)) {
+                    throw new InvalidArgumentException('No se puede repetir el mismo método de pago.');
                 }
                 $c = (int)round((float)($p['monto'] ?? 0) * 100);
                 if ($c <= 0) {

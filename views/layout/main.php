@@ -1,7 +1,7 @@
 <?php
 $menu = [
     'General'       => [['dashboard', '📊', 'Resumen']],
-    'Operaciones'   => [['ventas', '🧾', 'Ventas'], ['caja', '💵', 'Cajas']],
+    'Operaciones'   => [['ventas', '🧾', 'Ventas'], ['pagos', '💳', 'Pagos'], ['caja', '💵', 'Cajas']],
     'Inventario'    => [['productos', '📦', 'Productos'], ['categorias', '🏷️', 'Categorías'], ['stock', '🗃️', 'Stock']],
     'Personas'      => [['clientes', '👥', 'Clientes'], ['empleados', '🧑‍💼', 'Empleados'], ['asistencia', '🕘', 'Asistencia']],
     'Configuración' => [['sucursales', '🏬', 'Sucursales'], ['incidentes', '⚠️', 'Incidentes']],
