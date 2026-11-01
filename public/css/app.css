@@ -256,3 +256,66 @@ th a{color:inherit}
   aside,header,.vt-page,#vtOv,.vt-df{display:none!important}
   #vtDrawer{position:static;transform:none;visibility:visible;width:auto;box-shadow:none}
 }
+
+/* ---------- Mi caja (cajero): estilo moderno y claro ---------- */
+main.micaja{background:radial-gradient(900px 380px at 85% -10%,rgba(47,107,255,.10),transparent),#EDF2FB;min-height:100vh}
+
+/* Banner del turno */
+main.micaja .hero{position:relative;overflow:hidden;background:linear-gradient(110deg,#0A1233,#173a9a);border-radius:18px;padding:26px 30px;box-shadow:0 8px 24px rgba(10,18,51,.18)}
+main.micaja .hero::after{content:"";position:absolute;top:0;right:24%;width:90px;height:100%;background:var(--y);transform:skewX(-24deg)}
+main.micaja .hero>*{position:relative;z-index:1}
+main.micaja .hero span::before{content:"";display:inline-block;width:8px;height:8px;margin-right:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.25)}
+
+/* Tarjetas de resumen */
+main.micaja .kp-grid{gap:16px}
+main.micaja .kp,main.micaja .kp.y,main.micaja .kp.b,main.micaja .kp.p{border:1px solid #fff;border-radius:18px;padding:20px;box-shadow:0 4px 18px rgba(30,60,140,.07)}
+main.micaja .kp.g{background:linear-gradient(135deg,#E6F8EE,#fff)}
+main.micaja .kp.y{background:linear-gradient(135deg,#FFF6D6,#fff)}
+main.micaja .kp.b{background:linear-gradient(135deg,#E8F0FF,#fff)}
+main.micaja .kp.p{background:linear-gradient(135deg,#F1ECFF,#fff)}
+main.micaja .kp .hd{display:flex;align-items:center;gap:12px}
+main.micaja .kp .hd p{font-weight:600;color:#0F1B3D}
+main.micaja .kp .hd i{display:grid;place-items:center;width:52px;height:52px;border-radius:15px;font-size:24px;font-style:normal;box-shadow:0 6px 14px rgba(0,0,0,.12)}
+main.micaja .kp.g .hd i{background:linear-gradient(135deg,#16a34a,#4ade80)}
+main.micaja .kp.y .hd i{background:linear-gradient(135deg,#FFC400,#FF9F1C)}
+main.micaja .kp.b .hd i{background:linear-gradient(135deg,#2F6BFF,#5B8CFF)}
+main.micaja .kp.p .hd i{background:linear-gradient(135deg,#7C5CFF,#A78BFF)}
+main.micaja .kp h2{font-size:32px;color:#0F1B3D;margin:14px 0 4px}
+
+/* Tablas y tarjetas blancas */
+main.micaja .tw,main.micaja .card{background:#fff;border:1px solid #E4EAF5;border-radius:18px;box-shadow:0 4px 18px rgba(30,60,140,.07)}
+main.micaja .tools{padding:18px 20px}
+main.micaja .ti{display:inline-grid;place-items:center;width:38px;height:38px;margin-right:10px;border-radius:11px;background:#FFF1C2;font-style:normal;vertical-align:middle}
+main.micaja th{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:#6B7694;background:#F4F7FD;border-bottom:1px solid #E4EAF5}
+main.micaja tr:hover td{background:#F4F7FD}
+
+/* Medios de pago con barras */
+main.micaja .mp-row{margin-top:14px}
+main.micaja .mp-top{display:flex;align-items:center;gap:10px;font-size:14px}
+main.micaja .mp-top u{text-decoration:none;display:grid;place-items:center;width:30px;height:30px;border-radius:9px}
+main.micaja .mp-top span{flex:1;color:#0F1B3D}
+main.micaja .mp-row>i{display:block;height:7px;margin-top:8px;border-radius:9px;background:#E4EAF5;overflow:hidden}
+main.micaja .mp-row s{display:block;height:100%;border-radius:9px;text-decoration:none}
+
+/* Formularios */
+main.micaja .formulario{max-width:none}
+main.micaja .campos input,main.micaja .campos select{border-radius:12px;padding:12px 14px;border-color:#E4EAF5}
+main.micaja .campos input:focus,main.micaja .campos select:focus{border-color:#2F6BFF;box-shadow:0 0 0 4px #E8F0FF}
+main.micaja .btn.y{box-shadow:0 6px 16px rgba(255,196,0,.35)}
+
+@media (max-width:1000px){main.micaja .pos{grid-template-columns:1fr}}
+
+/* ---------- Ventana de confirmación (Mi caja) ---------- */
+.mc-modal{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(10,18,51,.6);backdrop-filter:blur(4px);font-family:inherit}
+.mc-modal.open{display:flex}
+.mc-box{width:min(420px,92vw);background:#fff;border-radius:18px;overflow:hidden;text-align:center;box-shadow:0 20px 50px rgba(10,18,51,.4)}
+.mc-box::before{content:"";display:block;height:84px;background:linear-gradient(110deg,#0A1233,#173a9a)}
+.mc-box i{display:grid;place-items:center;width:68px;height:68px;margin:-34px auto 12px;position:relative;border-radius:18px;border:4px solid #fff;background:linear-gradient(135deg,#FFC400,#FF9F1C);font-size:30px;font-style:normal;box-shadow:0 6px 14px rgba(0,0,0,.15)}
+.mc-box h3{margin:0 0 6px;padding:0 24px;font-size:20px;color:#0F1B3D}
+.mc-box p{margin:0 0 22px;padding:0 24px;color:#6B7694;font-size:14px}
+.mc-btns{display:flex;gap:10px;padding:0 24px 24px}
+.mc-btns button{flex:1;padding:13px;border:0;border-radius:12px;font:inherit;font-weight:700;font-size:15px;cursor:pointer}
+.mc-no{background:#EDF2FB;color:#0F1B3D}
+.mc-no:hover{background:#E4EAF5}
+.mc-si{background:#FFC400;color:#0A1233;box-shadow:0 6px 16px rgba(255,196,0,.35)}
+.mc-si:hover{background:#FFB300}

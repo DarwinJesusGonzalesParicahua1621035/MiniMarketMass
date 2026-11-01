@@ -8,7 +8,7 @@ class PosRepository extends Repository
     public function turno(int $empleadoId): ?array
     {
         $s = $this->db()->prepare("SELECT h.id, h.caja_id, c.nombre AS caja, c.sucursal_id,
-                s.nombre AS sucursal, s.direccion, s.serie_boleta, s.serie_factura, h.apertura
+                s.nombre AS sucursal, s.direccion, s.serie_boleta, s.serie_factura, h.apertura, h.monto_inicial
             FROM historia_caja h
             JOIN caja c ON c.id = h.caja_id
             JOIN sucursal s ON s.id = c.sucursal_id
@@ -231,5 +231,32 @@ class PosRepository extends Repository
     private function dec(int $centavos): string
     {
         return number_format($centavos / 100, 2, '.', '');
+    }
+  // Totales del turno: cantidad, total y lo cobrado por medio de pago.
+    public function resumenTurno(int $historiaId): array
+    {
+        $db = $this->db();
+        $s = $db->prepare("SELECT COUNT(*) AS n, COALESCE(SUM(total), 0) AS total
+            FROM venta WHERE historia_caja_id = ? AND estado = 'EMITIDA'");
+        $s->execute([$historiaId]);
+        $r = $s->fetch();
+
+        $s = $db->prepare("SELECT pv.medio_pago, SUM(pv.monto) FROM pago_venta pv
+            JOIN venta v ON v.id = pv.venta_id
+            WHERE v.historia_caja_id = ? AND v.estado = 'EMITIDA' GROUP BY pv.medio_pago");
+        $s->execute([$historiaId]);
+        $r['medios'] = $s->fetchAll(PDO::FETCH_KEY_PAIR);
+        return $r;
+    }
+
+    // Ventas hechas en un turno, de la más reciente a la más antigua.
+    public function ventasTurno(int $historiaId): array
+    {
+        $s = $this->db()->prepare("SELECT CONCAT(v.serie, '-', LPAD(v.correlativo, 6, '0')) AS comprobante,
+                v.fecha, COALESCE(c.nombre, '—') AS cliente, v.total, v.estado
+            FROM venta v LEFT JOIN cliente c ON c.id = v.cliente_id
+            WHERE v.historia_caja_id = ? ORDER BY v.fecha DESC, v.id DESC");
+        $s->execute([$historiaId]);
+        return $s->fetchAll();
     }
 }

@@ -64,7 +64,7 @@ class CajaController extends Controller
                     (string)($_POST['monto_inicial'] ?? '')
                 );
                 $this->flash('Caja abierta');
-                $this->redirect('caja/index');
+                $this->volver('caja/index');
             } catch (InvalidArgumentException | RuntimeException | PDOException $e) {
                 $this->guardarOld(['caja_id', 'monto_inicial']);
                 $this->flash('No se pudo abrir: ' . $this->mensaje($e), 'err');
@@ -88,11 +88,11 @@ class CajaController extends Controller
                     (string)($_POST['monto_final'] ?? '')
                 );
                 $this->flash('Caja cerrada');
-                $this->redirect('caja/historial');
+                $this->volver('caja/historial');
             } catch (InvalidArgumentException | RuntimeException | PDOException $e) {
                 $this->guardarOld(['historia_id', 'monto_final']);
                 $this->flash('No se pudo cerrar: ' . $this->mensaje($e), 'err');
-                $this->redirect('caja/cerrar');
+                $this->volver('caja/cerrar');
             }
         }
         $this->render('caja/cerrar', [
@@ -101,6 +101,13 @@ class CajaController extends Controller
             'turnoSel'  => (int)($_GET['id'] ?? 0),
             'old'       => $this->tomarOld(),
         ]);
+    }
+
+    // Datos escritos antes de un error (se muestran una sola vez).
+    // Dónde volver: el cajero a su pantalla; el administrador al panel.
+    private function volver(string $admin): void
+    {
+        $this->redirect(Auth::user()['rol'] === 'CAJERO' ? 'cajero/caja' : $admin);
     }
 
     // Datos escritos antes de un error (se muestran una sola vez).
