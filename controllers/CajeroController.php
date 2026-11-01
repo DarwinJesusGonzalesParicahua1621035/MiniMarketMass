@@ -33,7 +33,23 @@ class CajeroController extends Controller
         $this->render('cajero/venta', ['titulo' => 'Nueva venta', 'cfg' => $cfg] + $b, false);
     }
 
+     // Mi caja: estado del turno, resumen de ventas y cierre.
+    public function caja(): void
+    {
+        $b = $this->contexto();
+        $datos = ['titulo' => 'Mi caja'] + $b;
+        if ($t = $b['turno']) {
+            $pos = new PosRepository();
+            $datos['resumen'] = $pos->resumenTurno((int)$t['id']);
+            $datos['ventas']  = $pos->ventasTurno((int)$t['id']);
+        } else {
+            $datos['cajas'] = (new CajaRepository())->libres();
+        }
+        $this->render('cajero/caja', $datos, false);
+    }
+
     // Busca un cliente por DNI o RUC (responde JSON).
+    
     public function cliente(): void
     {
         $doc = preg_replace('/\D/', '', (string)($_GET['doc'] ?? ''));

@@ -19,7 +19,7 @@ $iniciales = mb_strtoupper(implode('', array_map(
     <h6>Operación</h6>
     <a href="<?= Controller::url('cajero/venta') ?>" class="on"><span>🛒</span>Nueva venta</a>
     <button type="button"><span>🧾</span>Mis ventas</button>
-    <button type="button"><span>💵</span>Mi caja</button>
+    <a href="<?= Controller::url('cajero/caja') ?>"><span>💵</span>Mi caja</a>
     <h6>Consulta</h6>
     <button type="button"><span>👥</span>Clientes</button>
   </nav>
