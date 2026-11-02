@@ -41,7 +41,7 @@ class StockController extends Controller
         unset($_SESSION['stock_old']);
         $this->render('stock/registrar', [
             'titulo' => 'Registrar movimiento',
-            'combos' => $r->combinaciones(),
+            'stocks' => $r->opcionesStock(),
             'old'    => $old,
         ]);
     }
