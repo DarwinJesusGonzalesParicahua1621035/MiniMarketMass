@@ -27,8 +27,8 @@ $signos = array_map(fn($t) => $t[3] === '+' ? 1 : -1, $tipos);
 <div class="stk">
   <div class="stk-head">
     <div>
-      <h2>Registrar movimiento</h2>
-      <p>Actualiza el stock y deja constancia en el historial.</p>
+       <h2>Nuevo movimiento de inventario</h2>
+      <p>Completa los 5 pasos. El stock se actualiza y queda constancia en el historial.</p>
     </div>
   </div>
 
