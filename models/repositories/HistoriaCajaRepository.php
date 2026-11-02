@@ -2,51 +2,108 @@
 class HistoriaCajaRepository extends Repository
 {
     protected string $tabla = 'historia_caja';
-    protected string $listaSql = 'SELECT h.id, s.nombre AS sucursal, c.nombre AS caja, e.nombre AS empleado,
-        h.apertura, h.cierre, h.monto_inicial, h.monto_final, h.estado
-        FROM historia_caja h
-        JOIN caja c ON c.id = h.caja_id
-        JOIN sucursal s ON s.id = c.sucursal_id
-        JOIN empleado e ON e.id = h.empleado_id
-        ORDER BY h.apertura DESC';
+    protected string $listaSql = 'SELECT id, caja_id, empleado_id, apertura, cierre, monto_inicial, monto_final, estado
+        FROM historia_caja ORDER BY apertura DESC';
 
-    public function historial(?string $estado = null, int $limite = 200): array
+    private function base(): string
     {
-        $sql = 'SELECT h.id, s.nombre AS sucursal, c.nombre AS caja, e.nombre AS empleado,
-                h.apertura, h.cierre, h.monto_inicial, h.monto_final, h.estado
-                FROM historia_caja h
-                JOIN caja c ON c.id = h.caja_id
-                JOIN sucursal s ON s.id = c.sucursal_id
-                JOIN empleado e ON e.id = h.empleado_id '
-             . ($estado ? 'WHERE h.estado = ? ' : '')
-             . 'ORDER BY h.apertura DESC, h.id DESC LIMIT ' . (int)$limite;
+        return "SELECT h.id, h.caja_id, c.sucursal_id, s.nombre AS sucursal, c.nombre AS caja,
+                h.empleado_id, e.nombre AS resp, h.apertura, h.cierre,
+                h.monto_inicial AS ini, h.monto_final, h.estado,
+                COALESCE(vt.n, 0) AS n, COALESCE(vt.tot, 0) AS tot,
+                COALESCE(pg.ef, 0) AS ef, COALESCE(pg.ya, 0) AS ya,
+                COALESCE(pg.pl, 0) AS pl, COALESCE(pg.ta, 0) AS ta,
+                IF(h.estado = 'CERRADA', h.monto_final - (h.monto_inicial + COALESCE(pg.ef, 0)), NULL) AS dif
+            FROM historia_caja h
+            JOIN caja c ON c.id = h.caja_id
+            JOIN sucursal s ON s.id = c.sucursal_id
+            JOIN empleado e ON e.id = h.empleado_id
+            LEFT JOIN (
+                SELECT historia_caja_id AS hid, COUNT(*) AS n, SUM(total) AS tot
+                FROM venta WHERE estado = 'EMITIDA' GROUP BY historia_caja_id
+            ) vt ON vt.hid = h.id
+            LEFT JOIN (
+                SELECT v.historia_caja_id AS hid,
+                    SUM(CASE WHEN pv.medio_pago = 'EFECTIVO' THEN pv.monto ELSE 0 END) AS ef,
+                    SUM(CASE WHEN pv.medio_pago = 'YAPE' THEN pv.monto ELSE 0 END) AS ya,
+                    SUM(CASE WHEN pv.medio_pago = 'PLIN' THEN pv.monto ELSE 0 END) AS pl,
+                    SUM(CASE WHEN pv.medio_pago = 'TARJETA' THEN pv.monto ELSE 0 END) AS ta
+                FROM venta v JOIN pago_venta pv ON pv.venta_id = v.id
+                WHERE v.estado = 'EMITIDA' GROUP BY v.historia_caja_id
+            ) pg ON pg.hid = h.id";
+    }
+
+    private function donde(array $f): array
+    {
+        $w = ['1 = 1'];
+        $p = [];
+        if ($f['desde'] !== '') {
+            $w[] = 't.apertura >= ?';
+            $p[] = $f['desde'];
+        }
+        if ($f['hasta'] !== '') {
+            $w[] = 't.apertura < ?';
+            $p[] = date('Y-m-d', strtotime($f['hasta'] . ' +1 day'));
+        }
+        if ($f['sucursal']) {
+            $w[] = 't.sucursal_id = ?';
+            $p[] = $f['sucursal'];
+        }
+        if ($f['resp']) {
+            $w[] = 't.empleado_id = ?';
+            $p[] = $f['resp'];
+        }
+        if ($f['estado'] !== '') {
+            $w[] = 't.estado = ?';
+            $p[] = $f['estado'];
+        }
+        if ($f['dif'] === 'cuadra') {
+            $w[] = "t.estado = 'CERRADA' AND t.dif = 0";
+        } elseif ($f['dif'] === 'falta') {
+            $w[] = 't.dif < 0';
+        } elseif ($f['dif'] === 'sobra') {
+            $w[] = 't.dif > 0';
+        }
+        if ($f['q'] !== '') {
+            $w[] = "CONCAT(t.id, ' ', t.caja, ' ', t.sucursal) LIKE ?";
+            $p[] = '%' . ltrim($f['q'], '#') . '%';
+        }
+        return [implode(' AND ', $w), $p];
+    }
+
+    public function listado(array $f, int $limite, int $desplazamiento = 0): array
+    {
+        [$w, $p] = $this->donde($f);
+        $col = ['apertura' => 't.apertura', 'tot' => 't.tot', 'dif' => 't.dif'][$f['orden']] ?? 't.apertura';
+        $dir = $f['dir'] === 'asc' ? 'ASC' : 'DESC';
+        $sql = 'SELECT t.* FROM (' . $this->base() . ") t WHERE $w ORDER BY $col $dir, t.id DESC"
+             . ' LIMIT ' . max(1, $limite) . ' OFFSET ' . max(0, $desplazamiento);
         $s = $this->db()->prepare($sql);
-        $s->execute($estado ? [$estado] : []);
+        $s->execute($p);
         return $s->fetchAll();
     }
 
-    // Turnos abiertos, para el formulario de cierre.
-    public function abiertas(): array
+    public function reporte(array $f): array
     {
-        $o = [];
-        $q = "SELECT h.id, CONCAT(s.nombre, ' · ', c.nombre, ' · ', e.nombre,
-                     ' (desde ', DATE_FORMAT(h.apertura, '%d/%m %H:%i'), ', S/ ', h.monto_inicial, ')') AS texto
-              FROM historia_caja h
-              JOIN caja c ON c.id = h.caja_id
-              JOIN sucursal s ON s.id = c.sucursal_id
-              JOIN empleado e ON e.id = h.empleado_id
-              WHERE h.estado = 'ABIERTA'
-              ORDER BY s.nombre, c.nombre";
-        foreach ($this->db()->query($q) as $r) {
-            $o[$r['id']] = $r['texto'];
-        }
-        return $o;
+        [$w, $p] = $this->donde($f);
+        $sql = "SELECT COUNT(*) AS n, COALESCE(SUM(t.tot), 0) AS tot,
+                COUNT(DISTINCT DATE(t.apertura)) AS dias,
+                COALESCE(SUM(t.estado = 'ABIERTA'), 0) AS abiertos,
+                COALESCE(SUM(t.estado = 'CERRADA' AND t.dif <> 0), 0) AS condif,
+                COALESCE(SUM(CASE WHEN t.estado = 'CERRADA' THEN t.dif ELSE 0 END), 0) AS neto
+            FROM (" . $this->base() . ") t WHERE $w";
+        $s = $this->db()->prepare($sql);
+        $s->execute($p);
+        return $s->fetch();
     }
 
     public function abrir(int $cajaId, int $empleadoId, string $montoInicial): int
     {
         if ($cajaId <= 0) {
             throw new InvalidArgumentException('elige una caja.');
+        }
+        if ($empleadoId <= 0) {
+            throw new InvalidArgumentException('elige un responsable.');
         }
         if (!is_numeric($montoInicial) || (float)$montoInicial < 0) {
             throw new InvalidArgumentException('el monto inicial debe ser un número mayor o igual a 0.');
@@ -55,11 +112,15 @@ class HistoriaCajaRepository extends Repository
         $db = $this->db();
         $db->beginTransaction();
         try {
-            // Bloquea la caja para que dos personas no abran el mismo turno a la vez.
             $s = $db->prepare('SELECT id FROM caja WHERE id = ? FOR UPDATE');
             $s->execute([$cajaId]);
             if (!$s->fetch()) {
                 throw new RuntimeException('la caja no existe.');
+            }
+            $s = $db->prepare('SELECT 1 FROM empleado WHERE id = ? AND activo = 1');
+            $s->execute([$empleadoId]);
+            if (!$s->fetch()) {
+                throw new RuntimeException('el responsable no existe o está inactivo.');
             }
             $s = $db->prepare("SELECT 1 FROM historia_caja WHERE caja_id = ? AND estado = 'ABIERTA'");
             $s->execute([$cajaId]);
@@ -73,23 +134,25 @@ class HistoriaCajaRepository extends Repository
             $db->commit();
             return $id;
         } catch (Throwable $e) {
-            $db->rollBack();
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
             throw $e;
         }
     }
 
-    public function cerrar(int $historiaId, string $montoFinal): void
+    public function cerrar(int $historiaId, string $contado): void
     {
         if ($historiaId <= 0) {
             throw new InvalidArgumentException('elige un turno abierto.');
         }
-        if (!is_numeric($montoFinal) || (float)$montoFinal < 0) {
-            throw new InvalidArgumentException('el monto final debe ser un número mayor o igual a 0.');
+        if (!is_numeric($contado) || (float)$contado < 0) {
+            throw new InvalidArgumentException('el efectivo contado debe ser un número mayor o igual a 0.');
         }
         $s = $this->db()->prepare("UPDATE historia_caja
                                    SET cierre = NOW(), monto_final = ?, estado = 'CERRADA'
                                    WHERE id = ? AND estado = 'ABIERTA'");
-        $s->execute([round((float)$montoFinal, 2), $historiaId]);
+        $s->execute([round((float)$contado, 2), $historiaId]);
         if ($s->rowCount() !== 1) {
             throw new RuntimeException('ese turno no existe o ya estaba cerrado.');
         }

@@ -4,15 +4,17 @@ class VentasController extends Controller
     public function index(): void
     {
         $r = new VentaRepository();
+        $turno = (int)($_GET['turno'] ?? 0);
         $dia = $_GET['fecha'] ?? '';
         $d = DateTime::createFromFormat('Y-m-d', $dia);
         if (!$d || $d->format('Y-m-d') !== $dia) {
-            $dia = $r->ultimoDia();
+            $dia = ($turno ? $r->diaDeTurno($turno) : null) ?: $r->ultimoDia();
         }
         $num = fn($k) => is_numeric($_GET[$k] ?? '') ? (float)$_GET[$k] : null;
         $f = [
             'dia' => $dia,
-            'todos' => !empty($_GET['todos']),
+            'turno' => $turno,
+            'todos' => !empty($_GET['todos']) || $turno > 0,
             'q' => mb_substr(trim($_GET['q'] ?? ''), 0, 60),
             'sucursal' => (int)($_GET['sucursal'] ?? 0),
             'tipo' => in_array($_GET['tipo'] ?? '', ['BOLETA', 'FACTURA'], true) ? $_GET['tipo'] : '',
