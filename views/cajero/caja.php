@@ -5,10 +5,6 @@
 //   $cajas   -> solo si no hay turno (cajas libres para abrir)
 //   $resumen -> solo si hay turno (n, total, medios)
 //   $ventas  -> solo si hay turno (ventas del turno)
-$iniciales = mb_strtoupper(implode('', array_map(
-    fn($p) => mb_substr($p, 0, 1),
-    array_slice(preg_split('/\s+/', trim($user['nombre'])), 0, 2)
-)));
 $efectivo = $turno ? (float)($resumen['medios']['EFECTIVO'] ?? 0) : 0;
 $esperado = $turno ? (float)$turno['monto_inicial'] + $efectivo : 0;
 $medios = [['EFECTIVO', '💵', 'Efectivo', '#2F6BFF'], ['PLIN', '📲', 'Plin', '#22c3a0'],
@@ -24,20 +20,7 @@ $cobrado = $turno ? (array_sum(array_map('floatval', $resumen['medios'])) ?: 1) 
 <link rel="stylesheet" href="<?= Controller::base() ?>/css/app.css">
 </head>
 <body class="cajero">
-<aside id="aside">
-  <div class="logo"><i>M</i><div>Tiendas Mass<small>PUNTO DE VENTA</small></div></div>
-  <nav>
-    <h6>Operación</h6>
-    <a href="<?= Controller::url('cajero/venta') ?>"><span>🛒</span>Nueva venta</a>
-    <button type="button"><span>🧾</span>Mis ventas</button>
-    <a href="<?= Controller::url('cajero/caja') ?>" class="on"><span>💵</span>Mi caja</a>
-    <h6>Consulta</h6>
-    <button type="button"><span>👥</span>Clientes</button>
-  </nav>
-  <div class="me"><b><?= e($iniciales) ?></b>
-    <div><?= e($user['nombre']) ?><small>Cajero<?= $sucursal ? ' · ' . e($sucursal) : '' ?></small>
-      <a href="<?= Controller::url('auth/salir') ?>">Cerrar sesión</a></div></div>
-</aside>
+<?php $activo = 'caja'; require __DIR__ . '/_nav.php'; ?>
 <main class="micaja">
   <header>
     <button id="menu" type="button">☰</button>
@@ -49,7 +32,6 @@ $cobrado = $turno ? (array_sum(array_map('floatval', $resumen['medios'])) ?: 1) 
   <?php if ($flash): ?><div class="flash <?= $flash[0] === 'err' ? 'err' : '' ?>"><?= e($flash[1]) ?></div><?php endif; ?>
 
   <?php if (!$turno): ?>
-    <!-- ===== Caja cerrada: abrir turno ===== -->
     <form class="card formulario" method="post" action="<?= Controller::url('caja/abrir') ?>">
       <h3>🔒 Tu caja está cerrada</h3>
       <small style="color:var(--g4)">Elige una caja y el dinero con el que empiezas.</small>
@@ -74,7 +56,6 @@ $cobrado = $turno ? (array_sum(array_map('floatval', $resumen['medios'])) ?: 1) 
     </form>
 
   <?php else: ?>
-    <!-- ===== Caja abierta: resumen del turno ===== -->
     <div class="hero">
       <div>
         <h2><?= e($turno['caja']) ?> · <?= e($turno['sucursal']) ?></h2>
@@ -163,7 +144,6 @@ $cobrado = $turno ? (array_sum(array_map('floatval', $resumen['medios'])) ?: 1) 
 </script>
 <?php if ($turno): ?>
 <script>
-// Diferencia entre el dinero contado y lo esperado en caja.
 (function () {
   var esperado = <?= json_encode($esperado) ?>;
   var inp = document.getElementById('contado'), dif = document.getElementById('dif');
@@ -175,8 +155,6 @@ $cobrado = $turno ? (array_sum(array_map('floatval', $resumen['medios'])) ?: 1) 
   });
 })();
 </script>
-<?php endif; ?>
-<?php if ($turno): ?>
 <div class="mc-modal" id="mcModal">
   <div class="mc-box">
     <i>🔒</i>

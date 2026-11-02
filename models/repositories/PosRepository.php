@@ -232,7 +232,8 @@ class PosRepository extends Repository
     {
         return number_format($centavos / 100, 2, '.', '');
     }
-  // Totales del turno: cantidad, total y lo cobrado por medio de pago.
+
+    // Totales del turno: cantidad, total y lo cobrado por medio de pago.
     public function resumenTurno(int $historiaId): array
     {
         $db = $this->db();
@@ -257,6 +258,33 @@ class PosRepository extends Repository
             FROM venta v LEFT JOIN cliente c ON c.id = v.cliente_id
             WHERE v.historia_caja_id = ? ORDER BY v.fecha DESC, v.id DESC");
         $s->execute([$historiaId]);
+        return $s->fetchAll();
+    }
+
+    // Ventas que emitió un cajero en un día (para "Mis ventas").
+    public function misVentas(int $empleadoId, string $dia): array
+    {
+        $s = $this->db()->prepare("SELECT v.id, CONCAT(v.serie, '-', LPAD(v.correlativo, 6, '0')) AS comprobante,
+                v.tipo_comprobante AS tipo, v.fecha, COALESCE(c.nombre, '—') AS cliente, v.total, v.estado,
+                (SELECT GROUP_CONCAT(DISTINCT pv.medio_pago ORDER BY pv.medio_pago SEPARATOR ', ')
+                   FROM pago_venta pv WHERE pv.venta_id = v.id) AS pagos
+            FROM venta v LEFT JOIN cliente c ON c.id = v.cliente_id
+            WHERE v.empleado_id = ? AND v.fecha >= ? AND v.fecha < ?
+            ORDER BY v.fecha DESC, v.id DESC");
+        $s->execute([$empleadoId, $dia, date('Y-m-d', strtotime($dia . ' +1 day'))]);
+        return $s->fetchAll();
+    }
+
+    // Búsqueda de clientes por nombre o documento (para "Clientes").
+    public function clientes(string $q): array
+    {
+        $like = '%' . $q . '%';
+        $s = $this->db()->prepare('SELECT c.tipo_documento, c.numero_documento, c.nombre,
+                (SELECT COUNT(*) FROM venta v WHERE v.cliente_id = c.id) AS compras
+            FROM cliente c
+            WHERE c.nombre LIKE ? OR c.numero_documento LIKE ?
+            ORDER BY c.nombre LIMIT 100');
+        $s->execute([$like, $like]);
         return $s->fetchAll();
     }
 }

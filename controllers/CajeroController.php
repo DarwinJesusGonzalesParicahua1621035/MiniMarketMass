@@ -33,7 +33,7 @@ class CajeroController extends Controller
         $this->render('cajero/venta', ['titulo' => 'Nueva venta', 'cfg' => $cfg] + $b, false);
     }
 
-     // Mi caja: estado del turno, resumen de ventas y cierre.
+    // Mi caja: estado del turno, resumen de ventas y cierre.
     public function caja(): void
     {
         $b = $this->contexto();
@@ -48,8 +48,55 @@ class CajeroController extends Controller
         $this->render('cajero/caja', $datos, false);
     }
 
+    // Mis ventas: comprobantes del cajero en un día.
+    public function ventas(): void
+    {
+        $b = $this->contexto();
+        $f = (string)($_GET['fecha'] ?? '');
+        $d = DateTime::createFromFormat('Y-m-d', $f);
+        $dia = ($d && $d->format('Y-m-d') === $f) ? $f : date('Y-m-d');
+        $filas = (new PosRepository())->misVentas((int)Auth::user()['id'], $dia);
+        $this->render('cajero/ventas', [
+            'titulo' => 'Mis ventas', 'dia' => $dia, 'filas' => $filas,
+            'urlDetalle' => self::url('cajero/detalle'),
+        ] + $b, false);
+    }
+
+    // Detalle de una venta para el ticket (responde JSON).
+    public function detalle(): void
+    {
+        $u = Auth::user();
+        $ventas = new VentaRepository();
+        $v = $ventas->venta((int)($_GET['id'] ?? 0));
+        if (!$v || ($u['rol'] !== 'ADMINISTRADOR' && (int)$v['empleado_id'] !== (int)$u['id'])) {
+            $this->json(['ok' => false, 'error' => 'Venta no encontrada.'], 404);
+        }
+        $c = $v['cliente_id'] ? (new ClienteRepository())->buscar($v['cliente_id']) : null;
+        $this->json([
+            'ok' => true,
+            'venta' => [
+                'tipo' => $v['tipo_comprobante'], 'comprobante' => $v['comprobante'], 'fecha' => $v['fecha'],
+                'estado' => $v['estado'], 'cliente' => $v['cliente'],
+                'doc' => $c ? $c['tipo_documento'] . ' ' . $c['numero_documento'] : '',
+                'subtotal' => (float)$v['subtotal'], 'igv' => (float)$v['igv'], 'total' => (float)$v['total'],
+                'cajero' => $v['cajero'], 'sucursal' => $v['sucursal'],
+            ],
+            'items' => $ventas->detalle((int)$v['id']),
+            'pagos' => $ventas->pagos((int)$v['id']),
+        ]);
+    }
+
+    // Clientes: consulta por nombre, DNI o RUC.
+    public function clientes(): void
+    {
+        $b = $this->contexto();
+        $q = trim((string)($_GET['q'] ?? ''));
+        $this->render('cajero/clientes', [
+            'titulo' => 'Clientes', 'q' => $q, 'filas' => (new PosRepository())->clientes($q),
+        ] + $b, false);
+    }
+
     // Busca un cliente por DNI o RUC (responde JSON).
-    
     public function cliente(): void
     {
         $doc = preg_replace('/\D/', '', (string)($_GET['doc'] ?? ''));
