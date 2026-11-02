@@ -8,7 +8,7 @@ $prev = date('Y-m-d', strtotime("$dia -1 day"));
 $next = date('Y-m-d', strtotime("$dia +1 day"));
 $base = [
     'fecha' => $dia, 'q' => $f['q'], 'sucursal' => $f['sucursal'], 'tipo' => $f['tipo'], 'medio' => $f['medio'],
-    'caja' => $f['caja'], 'min' => $f['min'], 'max' => $f['max'], 'todos' => $f['todos'] ? 1 : null,
+    'caja' => $f['caja'], 'turno' => $f['turno'], 'min' => $f['min'], 'max' => $f['max'], 'todos' => $f['todos'] ? 1 : null,
     'orden' => $f['orden'], 'dir' => $f['dir'],
 ];
 $link = fn(array $o = []) => Controller::url('ventas/index',
@@ -45,6 +45,16 @@ $sumaLista = array_sum(array_map(fn($r) => $r['estado'] === 'EMITIDA' ? (float)$
     </div>
   </div>
 
+  <?php if ($f['turno']): ?>
+    <div class="flash" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <span>Mostrando solo las ventas del <b>turno #<?= (int)$f['turno'] ?></b>.</span>
+      <span>
+        <a class="vt-link" href="<?= Controller::url('caja/index') ?>">Volver a Cajas</a> ·
+        <a class="vt-link" href="<?= Controller::url('ventas/index', ['fecha' => $dia]) ?>">Quitar filtro de turno</a>
+      </span>
+    </div>
+  <?php endif; ?>
+
   <section class="vt-report">
     <div class="vt-hero">
       <span>Total vendido</span>
@@ -71,6 +81,7 @@ $sumaLista = array_sum(array_map(fn($r) => $r['estado'] === 'EMITIDA' ? (float)$
       <input type="hidden" name="r" value="ventas/index">
       <input type="hidden" name="orden" value="<?= e($f['orden']) ?>">
       <input type="hidden" name="dir" value="<?= e($f['dir']) ?>">
+      <?php if ($f['turno']): ?><input type="hidden" name="turno" value="<?= (int)$f['turno'] ?>"><?php endif; ?>
       <label class="wide">Buscar
         <input class="vt-fld" name="q" type="search" value="<?= e($f['q']) ?>" placeholder="Comprobante, cliente o producto">
       </label>

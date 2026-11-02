@@ -40,6 +40,13 @@ class VentaRepository extends Repository
         return $d ?: date('Y-m-d');
     }
 
+    public function diaDeTurno(int $turno): ?string
+    {
+        $s = $this->db()->prepare('SELECT DATE(apertura) FROM historia_caja WHERE id = ?');
+        $s->execute([$turno]);
+        return $s->fetchColumn() ?: null;
+    }
+
     public function opciones(): array
     {
         $db = $this->db();
@@ -58,6 +65,10 @@ class VentaRepository extends Repository
             $w[] = 'v.fecha >= ? AND v.fecha < ?';
             $p[] = $f['dia'];
             $p[] = date('Y-m-d', strtotime($f['dia'] . ' +1 day'));
+        }
+        if (!empty($f['turno'])) {
+            $w[] = 'v.historia_caja_id = ?';
+            $p[] = $f['turno'];
         }
         if ($f['q'] !== '') {
             $like = '%' . $f['q'] . '%';
