@@ -19,6 +19,30 @@ class ClientesController extends CrudController
         ];
     }
 
+    // Pantalla principal: tabla + panel lateral con el informe general.
+    public function index(): void
+    {
+        $c = $this->config();
+        $filas = $c['repo']->conResumen();
+        $this->render('clientes/index', [
+            'c' => $c, 'filas' => $filas, 'titulo' => 'Clientes',
+            'general' => $c['repo']->informeGeneral($filas),
+        ]);
+    }
+
+    // Informe personal en JSON (lo pide el panel al hacer clic en un cliente).
+    public function detalle(): void
+    {
+        $d = $this->config()['repo']->detalle((int)($_GET['id'] ?? 0));
+        header('Content-Type: application/json; charset=utf-8');
+        if (!$d) {
+            http_response_code(404);
+            exit('{}');
+        }
+        echo json_encode($d, JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
     protected function antes(array $d, int $id): array
     {
         $largo = $d['tipo_documento'] === 'RUC' ? 11 : 8;
