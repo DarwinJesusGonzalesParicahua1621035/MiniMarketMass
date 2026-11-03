@@ -70,5 +70,17 @@ class VentasController extends Controller
             $this->flash('No se pudo anular: ' . $this->mensaje($e), 'err');
         }
         $this->redirect('ventas/ver', ['id' => $id]);
+        $this->redirect('ventas/ver', ['id' => $id]);
+    }
+
+    public function pos(): void
+    {
+        $repo = new VentaRepository();
+        
+        // Si la función obtenerProductos aún no existe en tu repositorio, 
+        // esto podría dar error. Si pasa eso, cámbialo temporalmente a: $productos = [];
+        $productos = $repo->obtenerProductos(1); 
+        
+        require ROOT . '/views/ventas/pos.php';
     }
 }

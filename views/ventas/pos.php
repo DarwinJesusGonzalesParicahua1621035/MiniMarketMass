@@ -40,4 +40,7 @@
 <!-- 3. LLAMAMOS AL JAVASCRIPT -->
 <script src="../../public/js/pos.js"></script>
 </body>
+<link rel="stylesheet" href="/MiniMarketMass-1/public/css/pos.css">
+<!-- ... resto de tu HTML ... -->
+<script src="/MiniMarketMass-1/public/js/pos.js"></script>
 </html>
