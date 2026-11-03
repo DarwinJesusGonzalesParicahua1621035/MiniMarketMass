@@ -1,0 +1,104 @@
+/* ============ Apartado de Clientes (panel admin) ============ */
+.cl [hidden],.cl-back-drop[hidden]{display:none!important}
+.cl{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:20px;align-items:start}
+.cl-main{min-width:0}
+
+/* Barra superior */
+.cl-bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.cl-search{flex:1;min-width:220px;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--g2);border-radius:12px;padding:0 14px;transition:.15s}
+.cl-search:focus-within{border-color:var(--b);box-shadow:0 0 0 3px var(--b2)}
+.cl-search input{flex:1;border:0;outline:0;background:none;font:inherit;padding:11px 0}
+.cl-chips{display:flex;gap:6px;flex-wrap:wrap;order:3;flex-basis:100%}
+.cl-chips button{border:1px solid var(--g2);background:#fff;border-radius:20px;padding:7px 14px;font:inherit;font-size:13px;font-weight:600;color:var(--g4);cursor:pointer}
+.cl-chips button b{margin-left:4px;font-weight:700;color:var(--g3)}
+.cl-chips button.on{background:var(--k);border-color:var(--k);color:#fff}.cl-chips button.on b{color:var(--y)}
+.cl-new{box-shadow:0 6px 16px rgba(31,79,216,.25)}
+
+/* Tabla */
+.cl-card th,.cl-card td{padding:13px 14px}.cl-card th:first-child,.cl-card td:first-child{padding-left:20px}
+.cl-card{background:#fff;border:1px solid var(--g2);border-radius:16px;overflow:hidden;box-shadow:0 4px 18px rgba(15,17,21,.05)}
+.cl-card tbody tr{cursor:pointer;transition:background .12s;outline:none}
+.cl-card tbody tr:hover td,.cl-card tbody tr:focus-visible td{background:#F6F8FE}
+.cl-card tbody tr.sel td{background:var(--b2)}
+.cl-card tbody tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--b)}
+.cl-card td small{display:block;color:var(--g4);font-size:12px;margin-top:1px}
+.cl-who{display:flex;align-items:center;gap:11px;font-weight:600}
+.cl-doc{font-size:11px;font-weight:700;background:var(--g1);color:var(--g4);padding:2px 7px;border-radius:6px;margin-right:4px}
+.cl-acts{text-align:right}
+.cl-acts .act{background:none;color:var(--g4)}.cl-acts .act:hover{background:var(--y);color:var(--k)}
+
+/* Avatares con iniciales */
+.av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:13px;font-weight:800;flex-shrink:0;background:var(--b2);color:var(--b)}
+.av.c1{background:#fff3c4;color:#8a6700}.av.c2{background:#e3f6ec;color:var(--ok)}
+.av.c3{background:#fbe5e5;color:var(--bad)}.av.c4{background:#f0e8ff;color:#6d35e8}.av.c5{background:#e0f5f8;color:#0b7a8a}
+.av.lg{width:58px;height:58px;font-size:20px}
+
+/* Panel lateral */
+.cl-panel{position:sticky;top:16px;height:calc(100vh - 32px);background:#fff;border:1px solid var(--g2);border-radius:18px;box-shadow:0 8px 28px rgba(15,17,21,.07);overflow:hidden}
+.cl-gen,.cl-det{position:absolute;inset:0;overflow-y:auto;padding:22px}
+.cl-ph h3{font-size:18px;letter-spacing:-.3px}.cl-ph small{color:var(--g4);font-size:12px}
+.cl-panel h5{font-size:11px;text-transform:uppercase;letter-spacing:.9px;color:var(--g4);margin:22px 0 10px}
+.cl-kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.cl-kpis>div{background:var(--g1);border-radius:12px;padding:12px 14px}
+.cl-kpis>div:first-child{background:var(--b);color:#fff}.cl-kpis>div:first-child p{color:#cfdcff}
+.cl-kpis p{font-size:12px;color:var(--g4)}.cl-kpis h4{font-size:19px;letter-spacing:-.5px;margin-top:2px}
+.cl-stack{display:flex;height:10px;border-radius:10px;overflow:hidden;background:var(--g1)}
+.cl-stack i{display:block;height:100%}
+.cl-stack i.y,.cl-leg i.y{background:var(--y)}.cl-stack i.ok,.cl-leg i.ok{background:var(--ok)}.cl-stack i.bad,.cl-leg i.bad{background:var(--bad)}
+.cl-leg{list-style:none;display:flex;gap:16px;margin-top:10px;font-size:13px;flex-wrap:wrap}
+.cl-leg li{display:flex;align-items:center;gap:6px}.cl-leg i{width:9px;height:9px;border-radius:50%}.cl-leg b{margin-left:2px}
+
+/* Gráfico de barras */
+.cl-bars{display:flex;align-items:flex-end;gap:10px;height:150px;padding-top:6px}
+.cl-bars>div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;min-width:0}
+.cl-bars b{font-size:10px;color:var(--k);white-space:nowrap}
+.cl-bars span{display:block;width:100%;max-width:34px;border-radius:7px 7px 0 0;background:linear-gradient(180deg,#4a78f0,var(--b));transition:height .5s cubic-bezier(.2,.8,.2,1)}
+.cl-bars em{font-style:normal;font-size:11px;color:var(--g4)}
+
+/* Top clientes */
+.cl-top{list-style:none;display:grid;gap:4px}
+.cl-top li{display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px;cursor:pointer;font-size:13px;font-weight:600;outline:none}
+.cl-top li:hover,.cl-top li:focus-visible{background:var(--g1)}
+.cl-top li span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cl-top small{display:block;font-weight:400;color:var(--g4);font-size:11px}
+.cl-top li.none{color:var(--g3);cursor:default;justify-content:center;font-weight:400}.cl-top li.none:hover{background:none}
+.cl-hint{font-size:12px;color:var(--g3);text-align:center;margin-top:18px}
+
+/* Informe personal: se superpone al general */
+.cl-det{background:#fff;z-index:2;transform:translateX(105%);transition:transform .32s cubic-bezier(.2,.8,.2,1);box-shadow:-10px 0 30px rgba(15,17,21,.08)}
+.cl-panel.open .cl-det{transform:none}
+.cl-dtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.cl-back{border:0;background:none;font:inherit;font-size:13px;font-weight:600;color:var(--b);cursor:pointer;padding:4px 0}
+.cl-x{border:0;background:var(--g1);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:13px;color:var(--g4)}.cl-x:hover{background:var(--y);color:var(--k)}
+.cl-id{display:flex;align-items:center;gap:14px}
+.cl-id h3{font-size:19px;letter-spacing:-.3px;line-height:1.2}
+.cl-id small{display:block;color:var(--g4);font-size:12.5px;margin-top:3px}
+.cl-id .tag{margin-top:6px}
+.cl-load,.cl-fail{padding:60px 0;text-align:center;color:var(--g3);font-size:14px}
+.cl-tk{width:100%;font-size:13px;border-collapse:collapse}
+.cl-tk th{padding:6px 0;background:none;font-size:11px}.cl-tk td{padding:9px 0;border-top:1px solid var(--g1)}
+.cl-tk td:nth-child(2){font-weight:700}.cl-tk a{color:var(--b);font-weight:600}.cl-tk a:hover{text-decoration:underline}
+.cl-qa{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cl-qa .btn{text-align:center;padding:10px 8px;font-size:14px}.cl-qa .btn.d{background:#fbe5e5;color:var(--bad)}.cl-qa .btn.d:hover{background:#f6d0d0}
+.cl-qa .btn.w{grid-column:1/-1}
+
+/* Drawer */
+.cl-back-drop{position:fixed;inset:0;background:rgba(15,17,21,.45);backdrop-filter:blur(2px);z-index:40;animation:clfade .2s}
+.cl-drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100vw);background:#fff;z-index:41;box-shadow:-16px 0 40px rgba(15,17,21,.18);transform:translateX(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1);visibility:hidden}
+.cl-drawer.open{transform:none;visibility:visible}
+.cl-drawer form{height:100%;display:flex;flex-direction:column}
+.cl-dhead{display:flex;justify-content:space-between;align-items:flex-start;padding:24px 24px 16px;border-bottom:1px solid var(--g2)}
+.cl-dhead h3{font-size:20px;letter-spacing:-.4px}.cl-dhead small{color:var(--g4)}
+.cl-dbody{flex:1;overflow-y:auto;padding:8px 24px 24px}
+.cl-dbody label span{text-transform:none;letter-spacing:0;font-weight:400;color:var(--g3)}
+.cl-dfoot{display:flex;gap:10px;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--g2);background:var(--g1)}
+@keyframes clfade{from{opacity:0}}
+
+/* Responsive: el panel pasa debajo de la tabla y el informe personal se abre como hoja a pantalla completa */
+@media(max-width:1180px){
+  .cl{grid-template-columns:1fr}
+  .cl-panel{position:static;height:auto;overflow:visible;border-radius:18px}
+  .cl-gen{position:static;overflow:visible}
+  .cl-det{position:fixed;inset:0 0 0 auto;width:min(440px,100vw);z-index:42;border-radius:0}
+  .cl-panel.open::before{content:"";position:fixed;inset:0;background:rgba(15,17,21,.45);z-index:41}
+}
