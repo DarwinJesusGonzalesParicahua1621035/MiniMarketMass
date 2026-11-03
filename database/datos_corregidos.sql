@@ -17,13 +17,18 @@ INSERT INTO empleado (sucursal_id, supervisor_id, nombre, usuario, clave, rol, a
  (2, 1, 'Rosa Ccama', 'rccama', @h, 'ALMACENERO', 1),
  (3, 1, 'Diego Flores', 'dflores', @h, 'CAJERO', 0);
 
-INSERT INTO producto (categoria_id, codigo_barras, nombre, unidad, precio, activo) VALUES
- (1, '7750182001234', 'Arroz Costeño 1 kg', 'kg', 4.50, 1),
- (2, '7750182005678', 'Leche Gloria 400 g', 'unidad', 4.20, 1),
- (3, '7750182009012', 'Inca Kola 1.5 L', 'unidad', 7.90, 1),
- (4, '7750182003456', 'Detergente Ariel 1 kg', 'unidad', 12.50, 1),
- (5, '7750182007890', 'Papas Lays 150 g', 'unidad', 5.50, 0),
- (1, '7750182002468', 'Aceite Primor 1 L', 'unidad', 9.80, 1);
+INSERT INTO proveedor (ruc, razon_social, contacto, telefono, correo, direccion, activo) VALUES
+ ('20100070970', 'Alicorp Distribuciones SAC', 'Marco Rivas', '054223344', 'ventas@alicorp-dist.pe', 'Parque Industrial, Arequipa', 1),
+ ('20100190797', 'Gloria Mayorista SA', 'Ana Torres', '054334455', 'pedidos@gloria-may.pe', 'Av. Jesús 560, Arequipa', 1),
+ ('20101234561', 'Embotelladora Sur SAC', 'Luis Mamani', '054445566', 'contacto@embosur.pe', 'Av. Alcides Carrión 300, Arequipa', 1),
+ ('20105678901', 'Limpieza Total EIRL', 'Elena Cruz', '054556677', NULL, 'Calle Piérola 150, Arequipa', 1);
+INSERT INTO producto (categoria_id, proveedor_id, codigo_barras, nombre, unidad, precio, activo) VALUES
+ (1, 1, '7750182001234', 'Arroz Costeño 1 kg', 'kg', 4.50, 1),
+ (2, 2, '7750182005678', 'Leche Gloria 400 g', 'unidad', 4.20, 1),
+ (3, 3, '7750182009012', 'Inca Kola 1.5 L', 'unidad', 7.90, 1),
+ (4, 4, '7750182003456', 'Detergente Ariel 1 kg', 'unidad', 12.50, 1),
+ (5, 3, '7750182007890', 'Papas Lays 150 g', 'unidad', 5.50, 0),
+ (1, 1, '7750182002468', 'Aceite Primor 1 L', 'unidad', 9.80, 1);
 INSERT INTO historial_precio (producto_id, precio, fecha_inicio) SELECT id, precio, '2026-01-01 00:00:00' FROM producto;
 
 INSERT INTO stock (sucursal_id, producto_id, cantidad) VALUES (1, 1, 120), (1, 2, 8), (2, 3, 64), (3, 4, 5), (3, 6, 42);
