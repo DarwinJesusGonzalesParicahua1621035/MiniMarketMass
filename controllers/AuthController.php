@@ -1,32 +1,27 @@
 <?php
-// controllers/AuthController.php
-require_once __DIR__ . '/../models/empleado.php';
+class AuthController extends Controller
+{
+    protected bool $publico = true;
 
-class AuthController {
-    public function showLogin() {
-        require_once __DIR__ . '/../views/auth/login.php';
-    }
-
-    public function login() {
-        $usuario = $_POST['usuario'] ?? '';
-        $clave = $_POST['clave'] ?? '';
-        
-        $empleadoModel = new Empleado();
-        $user = $empleadoModel->findByUsername($usuario);
-        
-        // En producción usa password_verify(), aquí es texto plano para el ejemplo
-        if ($user && $user['clave'] === $clave && $user['activo'] == 1) {
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_name'] = $user['nombre'];
-            $_SESSION['user_role'] = $user['rol'];
-            header('Location: /');
-        } else {
-            header('Location: /login?error=1');
+    public function login(): void
+    {
+        if ($u = Auth::user()) {
+            $this->redirect(Auth::inicio($u['rol']));
         }
+        $error = null;
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (Auth::login(trim($_POST['usuario'] ?? ''), $_POST['clave'] ?? '')) {
+                $this->redirect(Auth::inicio(Auth::user()['rol']));
+            }
+            $error = 'Usuario o clave incorrectos, o sin acceso al sistema.';
+        }
+        $this->render('auth/login', ['error' => $error], false);
     }
 
-    public function logout() {
-        session_destroy();
-        header('Location: /login');
+    public function salir(): void
+    {
+        Auth::logout();
+        header('Location: ' . self::url('auth/login'));
+        exit;
     }
 }
