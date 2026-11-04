@@ -7,19 +7,14 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const money = n => 'S/ ' + Number(n).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
   const fdt = s => +s.slice(8, 10) + ' ' + MES[+s.slice(5, 7) - 1] + ', ' + s.slice(11, 16);
-  const dur = (a, b) => {
-    const m = Math.max(0, Math.round((new Date(b.replace(' ', 'T')) - new Date(a.replace(' ', 'T'))) / 60000));
-    return Math.floor(m / 60) + ' h ' + String(m % 60).padStart(2, '0') + ' min';
-  };
+  const cap = s => s.charAt(0) + s.slice(1).toLowerCase();
 
+  /* Filtros: se aplican solos al elegir un chip o una fecha */
   const form = $('cjFiltros');
-  document.querySelectorAll('#cjFiltros select, select[form="cjFiltros"]').forEach(el =>
+  document.querySelectorAll('#cjFiltros input[type=radio], #cjFiltros input[type=date], select[form="cjFiltros"]').forEach(el =>
     el.addEventListener('change', () => form.requestSubmit()));
-  ['cjDesde', 'cjHasta'].forEach(id => $(id).addEventListener('change', () => {
-    $('cjP').value = '';
-    form.requestSubmit();
-  }));
 
+  /* Ventanas de abrir, cerrar y nueva caja */
   document.querySelectorAll('dialog.cj-d [data-x]').forEach(b =>
     b.addEventListener('click', () => b.closest('dialog').close()));
 
@@ -28,6 +23,7 @@
   const dNew = $('cjDNew');
 
   function abrirCaja(el) {
+    if (!dOpen) return;
     $('cjOpCaja').value = el.dataset.id;
     $('cjOpTitle').textContent = el.dataset.suc + ' · ' + el.dataset.nombre;
     dOpen.showModal();
@@ -73,7 +69,7 @@
 
   document.querySelectorAll('[data-abrir]').forEach(b => b.addEventListener('click', () => abrirCaja(b)));
   document.querySelectorAll('[data-cerrar]').forEach(b => b.addEventListener('click', () => cerrarCaja(b.dataset)));
-  if ($('cjNueva')) $('cjNueva').addEventListener('click', () => dNew.showModal());
+  if ($('cjNueva') && dNew) $('cjNueva').addEventListener('click', () => dNew.showModal());
 
   const pre = new URLSearchParams(location.search).get('abrir');
   if (pre) {
@@ -81,81 +77,73 @@
     if (b) abrirCaja(b);
   }
 
+  /* Drawer con las ventas de una caja */
   const drawer = $('cjDrawer');
   const ov = $('cjOv');
   let last = null;
+  let ventas = [];
 
-  function pintar(t) {
-    const abierto = t.st === 'ABIERTA';
-    const esperado = Number(t.ini) + Number(t.ef);
-    $('cjTitle').textContent = 'Turno #' + t.id;
-    $('cjChip').innerHTML = '<span class="cj-st ' + (abierto ? 'on' : '') + '">' + (abierto ? 'Abierto' : 'Cerrado') + '</span>';
+  function listar() {
+    const t = document.querySelector('#cjDrawer input[name=dt]:checked').value;
+    const p = document.querySelector('#cjDrawer input[name=dp]:checked').value;
+    const lista = ventas.filter(v => (!t || v.tipo === t) && (!p || String(v.pagos || '').split(', ').includes(p)));
+    const emitidas = a => a.filter(v => v.estado === 'EMITIDA');
+    const suma = a => emitidas(a).reduce((s, v) => s + Number(v.total), 0);
 
-    let arqueo = '<div class="cj-lin"><span>Monto inicial</span><span>' + money(t.ini) + '</span></div>'
-      + '<div class="cj-lin"><span>+ Ventas en efectivo</span><span>' + money(t.ef) + '</span></div>'
-      + '<div class="cj-lin g"><span>Efectivo esperado</span><span>' + money(esperado) + '</span></div>';
-    if (!abierto) {
-      const d = Math.round(Number(t.dif) * 100) / 100;
-      const txt = d === 0 ? 'Cuadra' : (d < 0 ? 'Falta ' : 'Sobra ') + money(Math.abs(d));
-      const cls = d === 0 ? 'ok' : (d < 0 ? 'bad' : 'sob');
-      arqueo += '<div class="cj-lin"><span>Efectivo contado</span><span>' + money(t.mf) + '</span></div>'
-        + '<div class="cj-lin"><span>Diferencia</span><span class="cj-dif ' + cls + '">' + txt + '</span></div>';
-    }
+    $('cjBody').innerHTML = lista.length
+      ? lista.map(v =>
+          '<div class="cj-vta' + (v.estado === 'ANULADA' ? ' anu' : '') + '"><div><b>' + esc(v.comprobante) + '</b>'
+          + '<span class="cj-vchip ' + (v.tipo === 'FACTURA' ? 'fac' : 'bol') + '">' + cap(v.tipo) + '</span>'
+          + (v.estado === 'ANULADA' ? '<span class="cj-vchip anu">Anulada</span>' : '')
+          + '<br><small>' + esc(v.cliente) + ' · ' + esc(String(v.pagos || '—').split(', ').map(cap).join(', ')) + ' · ' + fdt(v.fecha) + '</small></div>'
+          + '<div class="t">' + money(v.total) + '</div></div>').join('')
+      : '<div class="empty">No hay ventas con estos filtros.</div>';
 
-    $('cjBody').innerHTML =
-      '<div class="cj-meta">'
-      + '<div><small>Sucursal</small>' + esc(t.suc) + '</div>'
-      + '<div><small>Caja</small>' + esc(t.caja) + '</div>'
-      + '<div><small>Responsable</small>' + esc(t.resp) + '</div>'
-      + '<div><small>Duración</small>' + (abierto ? 'En curso' : dur(t.ap, t.ci)) + '</div>'
-      + '<div><small>Apertura</small>' + fdt(t.ap) + '</div>'
-      + '<div><small>Cierre</small>' + (t.ci ? fdt(t.ci) : '—') + '</div>'
-      + '</div>'
-      + '<div class="cj-bloque"><h4>Ventas del turno · ' + t.n + '</h4>'
-      + '<div class="cj-lin"><span>Efectivo</span><span>' + money(t.ef) + '</span></div>'
-      + '<div class="cj-lin"><span>Yape</span><span>' + money(t.ya) + '</span></div>'
-      + '<div class="cj-lin"><span>Plin</span><span>' + money(t.pl) + '</span></div>'
-      + '<div class="cj-lin"><span>Tarjeta</span><span>' + money(t.ta) + '</span></div>'
-      + '<div class="cj-lin g"><span>Total</span><span>' + money(t.tot) + '</span></div></div>'
-      + '<div class="cj-bloque"><h4>Arqueo</h4>' + arqueo + '</div>';
-
-    $('cjFoot').innerHTML = '<a class="btn g" href="' + drawer.dataset.ventas + '&turno=' + t.id + '">Ver ventas del turno</a>'
-      + (abierto ? '<button type="button" class="btn y" id="cjFootCerrar">Cerrar caja</button>' : '');
-    const bc = $('cjFootCerrar');
-    if (bc) bc.addEventListener('click', () => {
-      cerrar();
-      cerrarCaja({hid: t.id, suc: t.suc, caja: t.caja, ap: fdt(t.ap), ini: t.ini, ef: t.ef});
-    });
+    $('cjSumT').textContent = money(suma(ventas));
+    $('cjSumN').textContent = emitidas(ventas).length;
+    $('cjSumF').textContent = money(suma(lista));
   }
 
-  function abrir(tr) {
-    last = tr;
-    pintar(JSON.parse(tr.dataset.t));
+  async function abrirVentas(el) {
+    try {
+      const r = await fetch(drawer.dataset.url + '&id=' + el.dataset.hid, {headers: {Accept: 'application/json'}});
+      if (!r.ok) throw new Error();
+      ventas = (await r.json()).ventas || [];
+    } catch (e) {
+      alert('No se pudieron cargar las ventas. Recarga la página e inténtalo otra vez.');
+      return;
+    }
+    last = el;
+    $('cjTitle').textContent = el.dataset.titulo;
+    drawer.querySelectorAll('input[value=""]').forEach(i => { i.checked = true; });
+    listar();
     drawer.classList.add('on');
     ov.classList.add('on');
     drawer.setAttribute('aria-hidden', 'false');
     $('cjClose').focus();
   }
 
-  function cerrar() {
+  function cerrarDrawer() {
     drawer.classList.remove('on');
     ov.classList.remove('on');
     drawer.setAttribute('aria-hidden', 'true');
     if (last) last.focus();
   }
 
+  drawer.querySelectorAll('input[type=radio]').forEach(i => i.addEventListener('change', listar));
+  document.querySelectorAll('[data-ventas]').forEach(b => b.addEventListener('click', () => abrirVentas(b)));
   document.querySelectorAll('.cj-tr').forEach(tr => {
-    tr.addEventListener('click', () => abrir(tr));
+    tr.addEventListener('click', () => abrirVentas(tr));
     tr.addEventListener('keydown', e => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        abrir(tr);
+        abrirVentas(tr);
       }
     });
   });
-  $('cjClose').addEventListener('click', cerrar);
-  ov.addEventListener('click', cerrar);
+  $('cjClose').addEventListener('click', cerrarDrawer);
+  ov.addEventListener('click', cerrarDrawer);
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && drawer.classList.contains('on')) cerrar();
+    if (e.key === 'Escape' && drawer.classList.contains('on')) cerrarDrawer();
   });
 })();

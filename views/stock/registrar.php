@@ -85,7 +85,8 @@ $signos = array_map(fn($t) => $t[3] === '+' ? 1 : -1, $tipos);
           <label class="t" for="regCant">Cantidad</label>
           <small class="h">Cuántas unidades entran o salen.</small>
           <div class="reg-cant">
-            <input type="number" id="regCant" name="cantidad" step="0.001" min="0.001"
+                      <input type="text" id="regCant" name="cantidad" inputmode="numeric" pattern="[1-9][0-9]{0,6}"
+                   maxlength="7" autocomplete="off" title="Solo números enteros, mayores que 0"
                    value="<?= e($old['cantidad'] ?? '') ?>" placeholder="0" required>
             <em id="regUni"></em>
           </div>
@@ -185,7 +186,10 @@ $signos = array_map(fn($t) => $t[3] === '+' ? 1 : -1, $tipos);
 
   suc.addEventListener('change', function () { llenar(); actualizar(); });
   prod.addEventListener('change', actualizar);
-  cant.addEventListener('input', actualizar);
+    cant.addEventListener('input', function () {
+    cant.value = cant.value.replace(/\D/g, '').replace(/^0+/, '');
+    actualizar();
+  });
   document.querySelectorAll('input[name=tipo]').forEach(function (i) { i.addEventListener('change', actualizar); });
 
   var preSuc = <?= json_encode((string)($_GET['suc'] ?? '')) ?>;
