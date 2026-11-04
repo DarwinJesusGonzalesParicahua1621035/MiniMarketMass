@@ -1,9 +1,3 @@
-<?php
-$iniciales = mb_strtoupper(implode('', array_map(
-    fn($p) => mb_substr($p, 0, 1),
-    array_slice(preg_split('/\s+/', trim($user['nombre'])), 0, 2)
-)));
-?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -13,20 +7,7 @@ $iniciales = mb_strtoupper(implode('', array_map(
 <link rel="stylesheet" href="<?= Controller::base() ?>/css/app.css">
 </head>
 <body class="cajero">
-<aside id="aside">
-  <div class="logo"><i>M</i><div>Tiendas Mass<small>PUNTO DE VENTA</small></div></div>
-  <nav>
-    <h6>Operación</h6>
-    <a href="<?= Controller::url('cajero/venta') ?>" class="on"><span>🛒</span>Nueva venta</a>
-    <button type="button"><span>🧾</span>Mis ventas</button>
-    <button type="button"><span>💵</span>Mi caja</button>
-    <h6>Consulta</h6>
-    <button type="button"><span>👥</span>Clientes</button>
-  </nav>
-  <div class="me"><b><?= e($iniciales) ?></b>
-    <div><?= e($user['nombre']) ?><small>Cajero<?= $sucursal ? ' · ' . e($sucursal) : '' ?></small>
-      <a href="<?= Controller::url('auth/salir') ?>">Cerrar sesión</a></div></div>
-</aside>
+<?php $activo = 'venta'; require __DIR__ . '/_nav.php'; ?>
 <main>
   <header>
     <button id="menu" type="button">☰</button>

@@ -8,7 +8,7 @@ class PosRepository extends Repository
     public function turno(int $empleadoId): ?array
     {
         $s = $this->db()->prepare("SELECT h.id, h.caja_id, c.nombre AS caja, c.sucursal_id,
-                s.nombre AS sucursal, s.direccion, s.serie_boleta, s.serie_factura, h.apertura
+                s.nombre AS sucursal, s.direccion, s.serie_boleta, s.serie_factura, h.apertura, h.monto_inicial
             FROM historia_caja h
             JOIN caja c ON c.id = h.caja_id
             JOIN sucursal s ON s.id = c.sucursal_id
@@ -159,7 +159,7 @@ class PosRepository extends Repository
                 }
             }
             if ($recibidoC < $totalC) {
-                throw new InvalidArgumentException('El monto pagado no cubre el total.');
+                throw new InvalidArgumentException("El monto pagado no cubre el total. (recibido=$recibidoC, total=$totalC)");
             }
             $vueltoC = $recibidoC - $totalC;
             if ($vueltoC > $efectivoC) {
@@ -238,5 +238,60 @@ class PosRepository extends Repository
     private function dec(int $centavos): string
     {
         return number_format($centavos / 100, 2, '.', '');
+    }
+
+    // Totales del turno: cantidad, total y lo cobrado por medio de pago.
+    public function resumenTurno(int $historiaId): array
+    {
+        $db = $this->db();
+        $s = $db->prepare("SELECT COUNT(*) AS n, COALESCE(SUM(total), 0) AS total
+            FROM venta WHERE historia_caja_id = ? AND estado = 'EMITIDA'");
+        $s->execute([$historiaId]);
+        $r = $s->fetch();
+
+        $s = $db->prepare("SELECT pv.medio_pago, SUM(pv.monto) FROM pago_venta pv
+            JOIN venta v ON v.id = pv.venta_id
+            WHERE v.historia_caja_id = ? AND v.estado = 'EMITIDA' GROUP BY pv.medio_pago");
+        $s->execute([$historiaId]);
+        $r['medios'] = $s->fetchAll(PDO::FETCH_KEY_PAIR);
+        return $r;
+    }
+
+    // Ventas hechas en un turno, de la más reciente a la más antigua.
+    public function ventasTurno(int $historiaId): array
+    {
+        $s = $this->db()->prepare("SELECT CONCAT(v.serie, '-', LPAD(v.correlativo, 6, '0')) AS comprobante,
+                v.fecha, COALESCE(c.nombre, '—') AS cliente, v.total, v.estado
+            FROM venta v LEFT JOIN cliente c ON c.id = v.cliente_id
+            WHERE v.historia_caja_id = ? ORDER BY v.fecha DESC, v.id DESC");
+        $s->execute([$historiaId]);
+        return $s->fetchAll();
+    }
+
+    // Ventas que emitió un cajero en un día (para "Mis ventas").
+    public function misVentas(int $empleadoId, string $dia): array
+    {
+        $s = $this->db()->prepare("SELECT v.id, CONCAT(v.serie, '-', LPAD(v.correlativo, 6, '0')) AS comprobante,
+                v.tipo_comprobante AS tipo, v.fecha, COALESCE(c.nombre, '—') AS cliente, v.total, v.estado,
+                (SELECT GROUP_CONCAT(DISTINCT pv.medio_pago ORDER BY pv.medio_pago SEPARATOR ', ')
+                   FROM pago_venta pv WHERE pv.venta_id = v.id) AS pagos
+            FROM venta v LEFT JOIN cliente c ON c.id = v.cliente_id
+            WHERE v.empleado_id = ? AND v.fecha >= ? AND v.fecha < ?
+            ORDER BY v.fecha DESC, v.id DESC");
+        $s->execute([$empleadoId, $dia, date('Y-m-d', strtotime($dia . ' +1 day'))]);
+        return $s->fetchAll();
+    }
+
+    // Búsqueda de clientes por nombre o documento (para "Clientes").
+    public function clientes(string $q): array
+    {
+        $like = '%' . $q . '%';
+        $s = $this->db()->prepare('SELECT c.tipo_documento, c.numero_documento, c.nombre,
+                (SELECT COUNT(*) FROM venta v WHERE v.cliente_id = c.id) AS compras
+            FROM cliente c
+            WHERE c.nombre LIKE ? OR c.numero_documento LIKE ?
+            ORDER BY c.nombre LIMIT 100');
+        $s->execute([$like, $like]);
+        return $s->fetchAll();
     }
 }

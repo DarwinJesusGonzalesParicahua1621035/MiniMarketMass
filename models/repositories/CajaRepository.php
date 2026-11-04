@@ -5,34 +5,38 @@ class CajaRepository extends Repository
     protected string $listaSql = 'SELECT c.id, c.sucursal_id, s.nombre AS sucursal, c.nombre
         FROM caja c JOIN sucursal s ON s.id = c.sucursal_id ORDER BY s.nombre, c.nombre';
 
-    // Cajas con su turno abierto (si lo tiene).
-    public function conTurno(?int $sucursalId = null): array
+    public function ahora(): array
     {
-        $sql = "SELECT c.id, s.nombre AS sucursal, c.nombre,
-                h.id AS historia_id, h.apertura, h.monto_inicial, e.nombre AS empleado
-                FROM caja c
-                JOIN sucursal s ON s.id = c.sucursal_id
-                LEFT JOIN historia_caja h ON h.caja_id = c.id AND h.estado = 'ABIERTA'
-                LEFT JOIN empleado e ON e.id = h.empleado_id "
-             . ($sucursalId ? 'WHERE c.sucursal_id = ? ' : '')
-             . 'ORDER BY s.nombre, c.nombre';
-        $s = $this->db()->prepare($sql);
-        $s->execute($sucursalId ? [$sucursalId] : []);
-        return $s->fetchAll();
+        $sql = "SELECT c.id, c.nombre, s.nombre AS sucursal,
+                h.id AS historia_id, h.apertura, h.monto_inicial, e.nombre AS responsable,
+                COALESCE(vt.n, 0) AS n, COALESCE(vt.tot, 0) AS tot, COALESCE(pg.ef, 0) AS ef
+            FROM caja c
+            JOIN sucursal s ON s.id = c.sucursal_id
+            LEFT JOIN historia_caja h ON h.caja_id = c.id AND h.estado = 'ABIERTA'
+            LEFT JOIN empleado e ON e.id = h.empleado_id
+            LEFT JOIN (
+                SELECT historia_caja_id AS hid, COUNT(*) AS n, SUM(total) AS tot
+                FROM venta WHERE estado = 'EMITIDA' GROUP BY historia_caja_id
+            ) vt ON vt.hid = h.id
+            LEFT JOIN (
+                SELECT v.historia_caja_id AS hid, SUM(pv.monto) AS ef
+                FROM venta v JOIN pago_venta pv ON pv.venta_id = v.id
+                WHERE v.estado = 'EMITIDA' AND pv.medio_pago = 'EFECTIVO'
+                GROUP BY v.historia_caja_id
+            ) pg ON pg.hid = h.id
+            ORDER BY s.nombre, c.nombre";
+        return $this->db()->query($sql)->fetchAll();
     }
 
-    // Cajas sin turno abierto, para el formulario de apertura.
-    public function libres(): array
+    public function sucursales(): array
     {
-        $o = [];
-        $q = "SELECT c.id, CONCAT(s.nombre, ' · ', c.nombre) AS texto
-              FROM caja c JOIN sucursal s ON s.id = c.sucursal_id
-              WHERE NOT EXISTS (SELECT 1 FROM historia_caja h WHERE h.caja_id = c.id AND h.estado = 'ABIERTA')
-              ORDER BY s.nombre, c.nombre";
-        foreach ($this->db()->query($q) as $r) {
-            $o[$r['id']] = $r['texto'];
-        }
-        return $o;
+        return $this->pares('SELECT id, nombre FROM sucursal ORDER BY nombre');
+    }
+
+    public function responsables(): array
+    {
+        return $this->pares("SELECT id, nombre FROM empleado
+            WHERE activo = 1 AND rol IN ('ADMINISTRADOR', 'CAJERO') ORDER BY nombre");
     }
 
     public function crear(int $sucursalId, string $nombre): int
@@ -44,6 +48,22 @@ class CajaRepository extends Repository
         if ($nombre === '' || mb_strlen($nombre) > 40) {
             throw new InvalidArgumentException('el nombre es obligatorio y tiene máximo 40 caracteres.');
         }
-        return $this->insertar(['sucursal_id' => $sucursalId, 'nombre' => $nombre]);
+                return $this->insertar(['sucursal_id' => $sucursalId, 'nombre' => $nombre]);
+    }
+
+    // Cajas de la sucursal del empleado, con su estado: ocupada = 1 si ya tiene un turno abierto.
+    public function delEmpleado(int $empleadoId): array
+    {
+        $s = $this->db()->prepare("SELECT c.id, c.nombre, s.nombre AS sucursal,
+                (h.id IS NOT NULL) AS ocupada, r.nombre AS responsable
+            FROM empleado e
+            JOIN caja c ON c.sucursal_id = e.sucursal_id
+            JOIN sucursal s ON s.id = c.sucursal_id
+            LEFT JOIN historia_caja h ON h.caja_id = c.id AND h.estado = 'ABIERTA'
+            LEFT JOIN empleado r ON r.id = h.empleado_id
+            WHERE e.id = ?
+            ORDER BY c.nombre");
+        $s->execute([$empleadoId]);
+        return $s->fetchAll();
     }
 }

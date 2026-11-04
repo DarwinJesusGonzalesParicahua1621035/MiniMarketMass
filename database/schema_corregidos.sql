@@ -40,6 +40,22 @@ CREATE TABLE cliente (
     )
 ) ENGINE=InnoDB;
 
+-- Proveedores que abastecen los productos del minimarket.
+CREATE TABLE proveedor (
+    id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    ruc          CHAR(11)     NOT NULL,
+    razon_social VARCHAR(120) NOT NULL,
+    contacto     VARCHAR(100) NOT NULL,
+    telefono     VARCHAR(15)  NOT NULL,
+    correo       VARCHAR(100) NULL,
+    direccion    VARCHAR(150) NULL,
+    activo       TINYINT UNSIGNED NOT NULL DEFAULT 1,
+    PRIMARY KEY (id),
+    CONSTRAINT uq_proveedor_ruc UNIQUE (ruc),
+    CONSTRAINT ck_proveedor_ruc CHECK (CHAR_LENGTH(ruc) = 11),
+    CONSTRAINT ck_proveedor_activo CHECK (activo IN (0, 1))
+) ENGINE=InnoDB;
+
 -- ============================================================
 -- Tablas con claves foráneas
 -- ============================================================
@@ -88,10 +104,11 @@ CREATE TABLE empleado (
     CONSTRAINT fk_empleado_supervisor FOREIGN KEY (supervisor_id) REFERENCES empleado (id)
 ) ENGINE=InnoDB;
 
--- Productos a la venta con código de barras, unidad y precio vigente.
+-- Productos a la venta con proveedor, código de barras, unidad y precio vigente.
 CREATE TABLE producto (
     id            INT UNSIGNED  NOT NULL AUTO_INCREMENT,
     categoria_id  INT UNSIGNED  NOT NULL,
+    proveedor_id  INT UNSIGNED  NOT NULL,
     codigo_barras CHAR(13)      NOT NULL,
     nombre        VARCHAR(120)  NOT NULL,
     unidad        VARCHAR(20)   NOT NULL,
@@ -101,7 +118,8 @@ CREATE TABLE producto (
     CONSTRAINT uq_producto_codigo UNIQUE (codigo_barras),
     CONSTRAINT ck_producto_precio CHECK (precio >= 0),
     CONSTRAINT ck_producto_activo CHECK (activo IN (0, 1)),
-    CONSTRAINT fk_producto_categoria FOREIGN KEY (categoria_id) REFERENCES categoria (id)
+    CONSTRAINT fk_producto_categoria FOREIGN KEY (categoria_id) REFERENCES categoria (id),
+    CONSTRAINT fk_producto_proveedor FOREIGN KEY (proveedor_id) REFERENCES proveedor (id)
 ) ENGINE=InnoDB;
 
 -- Precios de cada producto por periodo de vigencia.
@@ -240,13 +258,14 @@ CREATE TABLE pago_venta (
     CONSTRAINT fk_pago_venta_venta FOREIGN KEY (venta_id) REFERENCES venta (id)
 ) ENGINE=InnoDB;
 
--- Entradas, salidas, ajustes y mermas de stock; puede estar ligado a una venta.
+-- Entradas, salidas, ajustes y mermas de stock; puede estar ligado a una venta o a un proveedor.
 CREATE TABLE movimiento_stock (
     id          INT UNSIGNED  NOT NULL AUTO_INCREMENT,
     sucursal_id INT UNSIGNED  NOT NULL,
     producto_id INT UNSIGNED  NOT NULL,
     empleado_id INT UNSIGNED  NOT NULL,
     venta_id    INT UNSIGNED  NULL,
+    proveedor_id INT UNSIGNED NULL,
     tipo        VARCHAR(7)    NOT NULL,
     cantidad    DECIMAL(10,3) NOT NULL,
     motivo      VARCHAR(100)  NULL,
@@ -256,5 +275,6 @@ CREATE TABLE movimiento_stock (
     CONSTRAINT ck_movimiento_cantidad CHECK (cantidad > 0),
     CONSTRAINT fk_movimiento_stock    FOREIGN KEY (sucursal_id, producto_id) REFERENCES stock (sucursal_id, producto_id),
     CONSTRAINT fk_movimiento_empleado FOREIGN KEY (empleado_id) REFERENCES empleado (id),
-    CONSTRAINT fk_movimiento_venta    FOREIGN KEY (venta_id)    REFERENCES venta (id)
+    CONSTRAINT fk_movimiento_venta    FOREIGN KEY (venta_id)    REFERENCES venta (id),
+    CONSTRAINT fk_movimiento_proveedor FOREIGN KEY (proveedor_id) REFERENCES proveedor (id)
 ) ENGINE=InnoDB;

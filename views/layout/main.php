@@ -2,7 +2,7 @@
 $menu = [
     'General'       => [['dashboard', '📊', 'Resumen']],
     'Operaciones'   => [['ventas', '🧾', 'Ventas'], ['pagos', '💳', 'Pagos'], ['caja', '💵', 'Cajas']],
-    'Inventario'    => [['productos', '📦', 'Productos'], ['categorias', '🏷️', 'Categorías'], ['stock', '🗃️', 'Stock']],
+    'Inventario'    => [['productos', '📦', 'Productos'], ['categorias', '🏷️', 'Categorías'], ['proveedores', '🏭', 'Proveedores'], ['stock', '🗃️', 'Stock']],
     'Personas'      => [['clientes', '👥', 'Clientes'], ['empleados', '🧑‍💼', 'Empleados'], ['asistencia', '🕘', 'Asistencia']],
     'Configuración' => [['sucursales', '🏬', 'Sucursales'], ['incidentes', '⚠️', 'Incidentes']],
 ];
@@ -18,7 +18,8 @@ $actual = explode('/', $_GET['r'] ?? 'dashboard/index')[0];
 </head>
 <body>
 <aside id="aside">
-  <div class="logo"><i>M</i><div>Tiendas Mass<small>PANEL ADMIN</small></div></div>
+  <div class="logo"><i>M</i><div>Tiendas Mass</div></div>
+  <div class="rol-top"><?= e(mb_strtoupper($user['rol'])) ?></div>
   <nav>
     <?php foreach ($menu as $grupo => $items): ?>
       <h6><?= e($grupo) ?></h6>

@@ -171,7 +171,13 @@
     addPay('EFECTIVO');
   }
   function addPay(m) {
-    if (P.length >= MAX_PAGOS || P.some(p => p.m === m)) return;
+    if (P.length >= MAX_PAGOS) return toast('Máximo dos métodos de pago por venta.', true);
+    const i = P.findIndex(p => p.m === m);
+    if (i >= 0) {
+      const inp = document.querySelector(`[data-monto="${i}"]`);
+      if (inp) { inp.focus(); inp.select(); }
+      return toast(`Ya agregaste ${cap(m)}. Solo se permite un pago por medio.`, true);
+    }
     const falta = Math.max(0, r2(total() - pagado()));
     P.push({m, monto: falta > 0 ? falta : '', ref: ''});
     renderPay();
@@ -183,7 +189,9 @@
       <button type="button" class="x" data-quitar="${i}">✕</button></div>`).join('')
       + (P.length >= MAX_PAGOS ? '<small style="color:var(--g4)">Máximo dos métodos de pago por venta.</small>' : '');
     document.querySelectorAll('[data-pay]').forEach(b => {
-      b.disabled = P.length >= MAX_PAGOS || P.some(p => p.m === b.dataset.pay);
+      const usado = P.some(p => p.m === b.dataset.pay);
+      b.disabled = P.length >= MAX_PAGOS || usado;
+      b.classList.toggle('on', usado);
       b.style.opacity = b.disabled ? '.4' : '';
       b.style.cursor = b.disabled ? 'not-allowed' : '';
     });

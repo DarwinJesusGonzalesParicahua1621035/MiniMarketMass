@@ -52,11 +52,26 @@ class StockRepository extends Repository
         return $o;
     }
 
+    // Cada combinación sucursal-producto con su cantidad, por separado (para el formulario por pasos).
+    public function opcionesStock(): array
+    {
+        return $this->db()->query(
+            "SELECT st.sucursal_id, s.nombre AS sucursal,
+                    st.producto_id, p.nombre AS producto, p.codigo_barras AS codigo, p.unidad, st.cantidad
+             FROM stock st
+             JOIN sucursal s ON s.id = st.sucursal_id
+             JOIN producto p ON p.id = st.producto_id
+             ORDER BY s.nombre, p.nombre"
+        )->fetchAll();
+    }
+
     // Productos activos que todavía no tienen fila de stock en alguna sucursal.
+
     public function faltantes(): array
     {
         return $this->db()->query(
             "SELECT s.id AS sucursal_id, p.id AS producto_id,
+                    s.nombre AS sucursal, p.nombre AS producto,
                     CONCAT(s.nombre, ' · ', p.nombre) AS texto
              FROM sucursal s CROSS JOIN producto p
              LEFT JOIN stock st ON st.sucursal_id = s.id AND st.producto_id = p.id

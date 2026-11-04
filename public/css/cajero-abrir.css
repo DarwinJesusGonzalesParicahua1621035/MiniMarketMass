@@ -1,0 +1,38 @@
+/* ===================================================
+   ABRIR CAJA: TARJETAS PARA ELEGIR CAJA
+   (usa las variables de color definidas en app.css)
+   =================================================== */
+.cj-sub{font-size:12px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.6px;margin:22px 0 10px}
+.cj-sub:first-of-type{margin-top:16px}
+
+/* Tarjetas */
+.cj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.cj-item{display:block;position:relative;cursor:pointer}
+.cj-item input{position:absolute;opacity:0;pointer-events:none}
+.cj-card{position:relative;display:flex;flex-direction:column;gap:2px;border:2px solid #E4EAF5;background:#fff;border-radius:16px;padding:16px;transition:.15s}
+.cj-item:hover .cj-card{border-color:var(--y);transform:translateY(-2px)}
+.cj-item input:focus-visible+.cj-card{border-color:var(--y);box-shadow:0 0 0 3px rgba(255,196,0,.4)}
+.cj-item input:checked+.cj-card{border-color:var(--y);background:#fffbea;box-shadow:0 0 0 3px rgba(255,196,0,.25)}
+.cj-ico{width:48px;height:48px;border-radius:14px;background:var(--y2);display:grid;place-items:center;font-size:23px;margin-bottom:10px}
+.cj-card b{font-size:18px}
+.cj-card small{color:var(--g4);font-size:12.5px}
+.cj-est{font-style:normal;margin-top:10px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:6px;color:var(--ok)}
+.cj-est::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ok);flex-shrink:0}
+.cj-ck{position:absolute;top:12px;right:12px;width:26px;height:26px;border-radius:50%;background:var(--y);color:var(--k);display:none;place-items:center;font-weight:900;font-size:14px}
+.cj-item input:checked+.cj-card .cj-ck{display:grid}
+
+/* Caja en uso */
+.cj-item.uso{cursor:not-allowed}
+.cj-item.uso .cj-card{background:var(--g1);opacity:.7}
+.cj-item.uso:hover .cj-card{border-color:#E4EAF5;transform:none}
+.cj-item.uso .cj-est{color:var(--bad)}
+.cj-item.uso .cj-est::before{background:var(--bad)}
+
+/* Monto inicial */
+.cj-montos{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.cj-mchip{border:1px solid var(--g2);background:#fff;border-radius:99px;padding:7px 14px;font:inherit;font-weight:600;font-size:13px;cursor:pointer}
+.cj-mchip:hover{border-color:var(--y)}
+.cj-mchip.on{background:var(--k);border-color:var(--k);color:var(--y)}
+.cj-monto{max-width:300px}
+.cj-resumen{background:var(--g1);border-radius:12px;padding:12px 14px;font-size:14px;margin-top:18px;color:var(--g4)}
+.cj-resumen b{color:#0F1B3D}

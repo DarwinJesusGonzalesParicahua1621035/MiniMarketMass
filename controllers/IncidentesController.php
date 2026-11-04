@@ -6,7 +6,7 @@ class IncidentesController extends CrudController
         $r = new IncidenteRepository();
         return [
             'carpeta' => 'incidentes', 'titulo' => 'Incidentes', 'singular' => 'incidente',
-            'repo' => $r, 'nuevo' => 'incidentes/nuevo', 'acciones' => ['editar', 'eliminar'],
+            'repo' => $r, 'acciones' => ['editar', 'eliminar'],
             'columnas' => [
                 'id' => ['#'], 'sucursal' => ['Sucursal'], 'tipo' => ['Tipo'], 'descripcion' => ['Descripción'],
                 'fecha' => ['Fecha'], 'estado' => ['Estado', 'etiqueta'],
@@ -36,5 +36,23 @@ class IncidentesController extends CrudController
             $d['fecha'] = date('Y-m-d H:i:s');
         }
         return $d;
+    }
+
+    // Botón del drawer: "Marcar como resuelto" / "Reabrir incidente"
+    public function cambiarestado(): void
+    {
+        $repo = new IncidenteRepository();
+        $i = $repo->buscar((int)($_POST['id'] ?? 0));
+        try {
+            if (!$i) {
+                throw new RuntimeException('el incidente no existe.');
+            }
+            $nuevo = $i['estado'] === 'ABIERTO' ? 'RESUELTO' : 'ABIERTO';
+            $repo->actualizar($i['id'], ['estado' => $nuevo]);
+            $this->flash($nuevo === 'RESUELTO' ? 'Incidente resuelto' : 'Incidente reabierto');
+        } catch (RuntimeException | PDOException $e) {
+            $this->flash('No se pudo cambiar el estado: ' . $this->mensaje($e), 'err');
+        }
+        $this->redirect('incidentes/index');
     }
 }

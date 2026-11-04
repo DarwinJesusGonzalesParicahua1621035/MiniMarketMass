@@ -6,16 +6,19 @@ class ProductoRepository extends Repository
         p.unidad, p.precio, p.activo
         FROM producto p JOIN categoria c ON c.id = p.categoria_id ORDER BY p.nombre';
 
-    // Lista de productos; si se da una categoría, solo muestra esa.
-    public function resumen(?int $categoriaId = null): array
+    // Lista de productos; se puede filtrar por categoría y/o proveedor.
+    public function resumen(?int $categoriaId = null, ?int $proveedorId = null): array
     {
-        $sql = 'SELECT p.id, p.codigo_barras, p.nombre, c.nombre AS categoria,
+        $where = []; $args = [];
+        if ($categoriaId) { $where[] = 'p.categoria_id = ?'; $args[] = $categoriaId; }
+        if ($proveedorId) { $where[] = 'p.proveedor_id = ?'; $args[] = $proveedorId; }
+        $sql = 'SELECT p.id, p.categoria_id, p.proveedor_id, p.codigo_barras, p.nombre, c.nombre AS categoria,
                 p.unidad, p.precio, p.activo
                 FROM producto p JOIN categoria c ON c.id = p.categoria_id '
-             . ($categoriaId ? 'WHERE p.categoria_id = ? ' : '')
+             . ($where ? 'WHERE ' . implode(' AND ', $where) . ' ' : '')
              . 'ORDER BY p.nombre';
         $s = $this->db()->prepare($sql);
-        $s->execute($categoriaId ? [$categoriaId] : []);
+        $s->execute($args);
         return $s->fetchAll();
     }
 
