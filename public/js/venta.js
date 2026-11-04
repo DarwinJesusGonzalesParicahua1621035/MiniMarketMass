@@ -8,6 +8,7 @@
   const esc = s => String(s).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
   const EMO = {Abarrotes: '🌾', 'Lácteos': '🥛', Bebidas: '🥤', Limpieza: '🧴', Snacks: '🍿'};
   const MEDIOS = [['EFECTIVO', '💵'], ['YAPE', '🟣'], ['PLIN', '🟦'], ['TARJETA', '💳']];
+  const MAX_PAGOS = 2;
   const cap = s => s[0] + s.slice(1).toLowerCase();
 
   let cart = [], comp = 'BOLETA', cat = 'Todas', q = '', P = [], enviando = false;
@@ -153,7 +154,8 @@
     const T = total(), pd = pagado();
     const cash = r2(P.filter(p => p.m === 'EFECTIVO').reduce((a, p) => a + (parseFloat(p.monto) || 0), 0));
     const vuelto = Math.max(0, r2(pd - T)), falta = Math.max(0, r2(T - pd));
-    return {T, pd, cash, vuelto, falta, ok: P.length > 0 && pd >= T && vuelto <= cash && P.every(p => parseFloat(p.monto) > 0)};
+    const distintos = new Set(P.map(p => p.m)).size === P.length;
+    return {T, pd, cash, vuelto, falta, ok: P.length > 0 && P.length <= MAX_PAGOS && distintos && pd >= T && vuelto <= cash && P.every(p => parseFloat(p.monto) > 0)};
   }
   function cobrar() {
     if (!cart.length) return;
@@ -168,8 +170,8 @@
       <div class="mrow"><button class="btn g" type="button" id="pcancel">Cancelar</button><button class="btn y" type="button" id="pok">Confirmar venta</button></div>`);
     addPay('EFECTIVO');
   }
-   function addPay(m) {
-    // Un solo pago por cada medio: si ya existe, solo se lleva al cajero a esa fila.
+  function addPay(m) {
+    if (P.length >= MAX_PAGOS) return toast('Máximo dos métodos de pago por venta.', true);
     const i = P.findIndex(p => p.m === m);
     if (i >= 0) {
       const inp = document.querySelector(`[data-monto="${i}"]`);
@@ -184,9 +186,15 @@
     $('pl').innerHTML = P.map((p, i) => `<div class="pl"><b style="font-size:13px">${cap(p.m)}</b>
       <input class="inp" type="number" step="0.01" min="0" value="${p.monto}" placeholder="Monto" data-monto="${i}">
       ${p.m === 'EFECTIVO' ? '<span style="font-size:12px;color:var(--g3)">Sin referencia</span>' : `<input class="inp" maxlength="30" placeholder="N.º operación" value="${esc(p.ref)}" data-ref="${i}">`}
-      <button type="button" class="x" data-quitar="${i}">✕</button></div>`).join('');
-    // Marca con ✓ los medios que ya están agregados.
-    document.querySelectorAll('[data-pay]').forEach(b => b.classList.toggle('on', P.some(p => p.m === b.dataset.pay)));
+      <button type="button" class="x" data-quitar="${i}">✕</button></div>`).join('')
+      + (P.length >= MAX_PAGOS ? '<small style="color:var(--g4)">Máximo dos métodos de pago por venta.</small>' : '');
+    document.querySelectorAll('[data-pay]').forEach(b => {
+      const usado = P.some(p => p.m === b.dataset.pay);
+      b.disabled = P.length >= MAX_PAGOS || usado;
+      b.classList.toggle('on', usado);
+      b.style.opacity = b.disabled ? '.4' : '';
+      b.style.cursor = b.disabled ? 'not-allowed' : '';
+    });
     renderSuma();
   }
   function renderSuma() {
