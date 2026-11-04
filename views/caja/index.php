@@ -4,7 +4,7 @@ $fdt = fn($s) => (int)substr($s, 8, 2) . ' ' . $meses[(int)substr($s, 5, 2) - 1]
 
 $base = [
     'f' => 1, 'desde' => $f['desde'], 'hasta' => $f['hasta'], 'sucursal' => $f['sucursal'],
-    'resp' => $f['resp'], 'estado' => $f['estado'], 'dif' => $f['dif'], 'q' => $f['q'],
+    'dif' => $f['dif'], 'q' => $f['q'],
     'orden' => $f['orden'], 'dir' => $f['dir'], 'ps' => $f['ps'],
 ];
 $limpio = fn(array $a) => array_filter($a, fn($v) => $v !== '' && $v !== null && $v !== 0);
@@ -36,7 +36,7 @@ $chips = function (string $name, array $ops, $actual): string {
 <div class="cj-page">
   <div class="cj-head">
     <?php if ($esAdmin): ?>
-      <p class="cj-mut">Puedes crear cajas, cerrarlas y ver sus ventas. Abrir una caja le toca al cajero.</p>
+      <p class="cj-mut">Puedes crear cajas y ver sus ventas. Abrir y cerrar una caja le toca al cajero.</p>
       <button type="button" class="btn g" id="cjNueva">+ Nueva caja</button>
     <?php else: ?>
       <p class="cj-mut">Cada caja se abre con un monto inicial y se cierra contando el efectivo.</p>
@@ -60,9 +60,11 @@ $chips = function (string $name, array $ops, $actual): string {
             <div class="cj-ca">
               <button type="button" class="btn g" data-ventas
                 data-hid="<?= (int)$c['historia_id'] ?>" data-titulo="<?= e($c['sucursal'] . ' · ' . $c['nombre']) ?>">Ver ventas</button>
+<?php if (!$esAdmin): ?>
               <button type="button" class="btn y" data-cerrar
                 data-hid="<?= (int)$c['historia_id'] ?>" data-suc="<?= e($c['sucursal']) ?>" data-caja="<?= e($c['nombre']) ?>"
                 data-ap="<?= e($fdt($c['apertura'])) ?>" data-ini="<?= e($c['monto_inicial']) ?>" data-ef="<?= e($c['ef']) ?>">Cerrar caja</button>
+              <?php endif; ?>
             </div>
           <?php else: ?>
             <p class="cj-mut cj-free">Sin caja abierta.</p>
@@ -99,14 +101,6 @@ $chips = function (string $name, array $ops, $actual): string {
       <div class="cj-grp" role="radiogroup" aria-label="Sucursal">
         <span class="cj-lb">Sucursal</span>
         <?= $chips('sucursal', [0 => 'Todas'] + $sucursales, $f['sucursal']) ?>
-      </div>
-      <div class="cj-grp" role="radiogroup" aria-label="Responsable">
-        <span class="cj-lb">Responsable</span>
-        <?= $chips('resp', [0 => 'Todos'] + $responsables, $f['resp']) ?>
-      </div>
-      <div class="cj-grp" role="radiogroup" aria-label="Estado">
-        <span class="cj-lb">Estado</span>
-        <?= $chips('estado', ['' => 'Todos', 'ABIERTA' => 'Abierto', 'CERRADA' => 'Cerrado'], $f['estado']) ?>
       </div>
       <div class="cj-grp" role="radiogroup" aria-label="Diferencia">
         <span class="cj-lb">Diferencia</span>

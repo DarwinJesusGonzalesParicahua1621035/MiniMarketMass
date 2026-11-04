@@ -822,3 +822,23 @@ main.micaja .btn.y{box-shadow:0 6px 16px rgba(255,196,0,.35)}
 .inc-btn-del{background:#fbe5e5;color:var(--bad)}.inc-btn-del:hover{background:#f6cfcf}
 @media(max-width:900px){.inc-stats{grid-template-columns:repeat(2,1fr)}}
 @media(prefers-reduced-motion:reduce){.inc-drawer,.inc-scrim{transition:none}}
+/* Resumen: gráficos por sucursal */
+.leyenda-suc,.leyenda-med{list-style:none;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;margin-top:12px}
+.leyenda-suc li,.leyenda-med li{display:flex;align-items:center;gap:6px}
+.leyenda-suc i,.leyenda-med i,.mp-top i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.gs{display:flex;gap:10px;height:200px;margin-top:18px}
+.gs-dia{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.gs-grupo{flex:1;display:flex;align-items:flex-end;gap:3px;min-height:0;border-bottom:1px solid var(--g2)}
+.gs-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:3px;min-width:0}
+.gs-col b{font-size:10px;font-weight:600;color:var(--g4);white-space:nowrap}
+.gs-col span{display:block;width:100%;border-radius:5px 5px 0 0;min-height:3px}
+.gs-dia em{font-style:normal;font-size:12px;color:var(--g4);text-align:center}
+.mp-list{display:grid;gap:16px;margin-top:16px}
+.mp-top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;margin-bottom:6px}
+.mp-top span{display:flex;align-items:center;gap:6px;font-weight:600}
+.mp-track{background:var(--g1);border-radius:8px;height:18px;overflow:hidden}
+.mp-bar{display:flex;height:100%;border-radius:8px;overflow:hidden;min-width:0}
+.mp-bar i{display:block;height:100%}
+.mp-pct{display:flex;flex-wrap:wrap;gap:2px 12px;margin-top:6px;font-size:11px;color:var(--g4)}
+.mp-pct b{color:var(--k)}
+.leyenda-med{margin-top:16px;padding-top:12px;border-top:1px solid var(--g2)}

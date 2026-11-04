@@ -10,18 +10,14 @@ class VentasController extends Controller
         if (!$d || $d->format('Y-m-d') !== $dia) {
             $dia = ($turno ? $r->diaDeTurno($turno) : null) ?: $r->ultimoDia();
         }
-        $num = fn($k) => is_numeric($_GET[$k] ?? '') ? (float)$_GET[$k] : null;
         $f = [
             'dia' => $dia,
             'turno' => $turno,
             'todos' => !empty($_GET['todos']) || $turno > 0,
             'q' => mb_substr(trim($_GET['q'] ?? ''), 0, 60),
             'sucursal' => (int)($_GET['sucursal'] ?? 0),
-            'tipo' => in_array($_GET['tipo'] ?? '', ['BOLETA', 'FACTURA'], true) ? $_GET['tipo'] : '',
-            'medio' => in_array($_GET['medio'] ?? '', ['EFECTIVO', 'PLIN', 'TARJETA', 'YAPE'], true) ? $_GET['medio'] : '',
-            'caja' => (int)($_GET['caja'] ?? 0),
-            'min' => $num('min'),
-            'max' => $num('max'),
+            // Filtros retirados de la pantalla: quedan vacíos para el repositorio.
+            'tipo' => '', 'medio' => '', 'caja' => 0, 'min' => null, 'max' => null,
             'orden' => ($_GET['orden'] ?? '') === 'total' ? 'total' : 'fecha',
             'dir' => ($_GET['dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc',
         ];

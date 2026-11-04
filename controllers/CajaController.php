@@ -37,8 +37,9 @@ class CajaController extends Controller
             'desde'    => $desde,
             'hasta'    => $hasta,
             'sucursal' => (int)($_GET['sucursal'] ?? 0),
-            'resp'     => (int)($_GET['resp'] ?? 0),
-            'estado'   => in_array($_GET['estado'] ?? '', ['ABIERTA', 'CERRADA'], true) ? $_GET['estado'] : '',
+            // Filtros retirados de la pantalla: quedan vacíos para el repositorio.
+            'resp'     => 0,
+            'estado'   => '',
             'dif'      => in_array($_GET['dif'] ?? '', ['cuadra', 'falta', 'sobra'], true) ? $_GET['dif'] : '',
             'q'        => mb_substr(trim($_GET['q'] ?? ''), 0, 60),
             'orden'    => in_array($_GET['orden'] ?? '', ['apertura', 'tot', 'dif'], true) ? $_GET['orden'] : 'apertura',

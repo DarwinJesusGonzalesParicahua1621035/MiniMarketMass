@@ -27,18 +27,25 @@ class ResumenRepository extends Repository
         ];
     }
 
-    public function semana(): array
+    public function sucursales(): array
     {
-        return $this->filas("SELECT DATE(fecha) AS dia, SUM(total) AS total FROM venta
-            WHERE estado = 'EMITIDA' AND fecha >= CURDATE() - INTERVAL 6 DAY GROUP BY DATE(fecha)");
+        return $this->filas('SELECT id, nombre FROM sucursal ORDER BY id');
     }
 
+    // Ventas de los últimos 7 días, separadas por sucursal.
+    public function semana(): array
+    {
+        return $this->filas("SELECT sucursal_id, DATE(fecha) AS dia, SUM(total) AS total FROM venta
+            WHERE estado = 'EMITIDA' AND fecha >= CURDATE() - INTERVAL 6 DAY GROUP BY sucursal_id, DATE(fecha)");
+    }
+
+    // Medios de pago de los últimos 7 días, separados por sucursal.
     public function medios(): array
     {
-        return $this->filas("SELECT p.medio_pago AS medio, SUM(p.monto) AS total
+        return $this->filas("SELECT v.sucursal_id, p.medio_pago AS medio, SUM(p.monto) AS total
             FROM pago_venta p JOIN venta v ON v.id = p.venta_id
             WHERE v.estado = 'EMITIDA' AND v.fecha >= CURDATE() - INTERVAL 6 DAY
-            GROUP BY p.medio_pago ORDER BY total DESC");
+            GROUP BY v.sucursal_id, p.medio_pago");
     }
 
     public function ultimas(): array
