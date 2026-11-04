@@ -12,7 +12,7 @@
   let last = null;
 
   const form = $('vtFiltros');
-  form.querySelectorAll('select, input[type=checkbox]').forEach(el => el.addEventListener('change', () => form.requestSubmit()));
+  form.querySelectorAll('select, input[type=radio], input[type=checkbox]').forEach(el => el.addEventListener('change', () => form.requestSubmit()));
   $('vtDia').addEventListener('change', e => e.target.value && form.requestSubmit());
 
   function pintar(v) {

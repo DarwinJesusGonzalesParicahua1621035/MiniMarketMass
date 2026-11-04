@@ -86,15 +86,36 @@ class HistoriaCajaRepository extends Repository
     public function reporte(array $f): array
     {
         [$w, $p] = $this->donde($f);
-        $sql = "SELECT COUNT(*) AS n, COALESCE(SUM(t.tot), 0) AS tot,
-                COUNT(DISTINCT DATE(t.apertura)) AS dias,
-                COALESCE(SUM(t.estado = 'ABIERTA'), 0) AS abiertos,
-                COALESCE(SUM(t.estado = 'CERRADA' AND t.dif <> 0), 0) AS condif,
-                COALESCE(SUM(CASE WHEN t.estado = 'CERRADA' THEN t.dif ELSE 0 END), 0) AS neto
-            FROM (" . $this->base() . ") t WHERE $w";
-        $s = $this->db()->prepare($sql);
+        $s = $this->db()->prepare('SELECT COUNT(*) AS n FROM (' . $this->base() . ") t WHERE $w");
         $s->execute($p);
         return $s->fetch();
+    }
+
+    public function ventasDe(int $historiaId): ?array
+    {
+        $db = $this->db();
+        $s = $db->prepare('SELECT h.id, h.estado, s.nombre AS sucursal, c.nombre AS caja
+            FROM historia_caja h
+            JOIN caja c ON c.id = h.caja_id
+            JOIN sucursal s ON s.id = c.sucursal_id
+            WHERE h.id = ?');
+        $s->execute([$historiaId]);
+        $t = $s->fetch();
+        if (!$t) {
+            return null;
+        }
+        $s = $db->prepare("SELECT v.id, v.estado, v.tipo_comprobante AS tipo, v.fecha, v.total,
+            CONCAT(v.serie, '-', LPAD(v.correlativo, 6, '0')) AS comprobante,
+            COALESCE(c.nombre, 'Cliente general') AS cliente,
+            (SELECT GROUP_CONCAT(DISTINCT pv.medio_pago ORDER BY pv.medio_pago SEPARATOR ', ')
+               FROM pago_venta pv WHERE pv.venta_id = v.id) AS pagos
+            FROM venta v
+            LEFT JOIN cliente c ON c.id = v.cliente_id
+            WHERE v.historia_caja_id = ?
+            ORDER BY v.fecha DESC, v.id DESC");
+        $s->execute([$historiaId]);
+        $t['ventas'] = $s->fetchAll();
+        return $t;
     }
 
     public function abrir(int $cajaId, int $empleadoId, string $montoInicial): int
@@ -125,7 +146,7 @@ class HistoriaCajaRepository extends Repository
             $s = $db->prepare("SELECT 1 FROM historia_caja WHERE caja_id = ? AND estado = 'ABIERTA'");
             $s->execute([$cajaId]);
             if ($s->fetch()) {
-                throw new RuntimeException('esa caja ya tiene un turno abierto.');
+                throw new RuntimeException('esa caja ya está abierta.');
             }
             $s = $db->prepare("INSERT INTO historia_caja (caja_id, empleado_id, apertura, monto_inicial, estado)
                                VALUES (?, ?, NOW(), ?, 'ABIERTA')");
@@ -144,7 +165,7 @@ class HistoriaCajaRepository extends Repository
     public function cerrar(int $historiaId, string $contado): void
     {
         if ($historiaId <= 0) {
-            throw new InvalidArgumentException('elige un turno abierto.');
+            throw new InvalidArgumentException('elige una caja abierta.');
         }
         if (!is_numeric($contado) || (float)$contado < 0) {
             throw new InvalidArgumentException('el efectivo contado debe ser un número mayor o igual a 0.');
@@ -154,7 +175,7 @@ class HistoriaCajaRepository extends Repository
                                    WHERE id = ? AND estado = 'ABIERTA'");
         $s->execute([round((float)$contado, 2), $historiaId]);
         if ($s->rowCount() !== 1) {
-            throw new RuntimeException('ese turno no existe o ya estaba cerrado.');
+            throw new RuntimeException('esa caja no está abierta o ya fue cerrada.');
         }
     }
 }
