@@ -11,6 +11,9 @@ class ProductosController extends CrudController
                 'categoria_id'  => ['label' => 'Categoría', 'tipo' => 'select', 'req' => true,
                                     'opciones' => fn() => ['' => '— Elige una categoría —']
                                         + $r->pares('SELECT id, nombre FROM categoria ORDER BY nombre')],
+                'proveedor_id'  => ['label' => 'Proveedor', 'tipo' => 'select', 'req' => true,
+                                    'opciones' => fn() => ['' => '— Elige un proveedor —']
+                                        + $r->pares('SELECT id, razon_social AS nombre FROM proveedor ORDER BY razon_social')],
                 'codigo_barras' => ['label' => 'Código de barras (13 caracteres)', 'tipo' => 'text', 'req' => true,
                                     'max' => 13, 'attr' => 'minlength="13" pattern=".{13}"'],
                 'nombre'        => ['label' => 'Nombre', 'tipo' => 'text', 'req' => true, 'max' => 120],
@@ -27,11 +30,14 @@ class ProductosController extends CrudController
     {
         $r = new ProductoRepository();
         $categoria = (int)($_GET['categoria'] ?? 0) ?: null;
+        $proveedor = (int)($_GET['proveedor'] ?? 0) ?: null;
         $this->render('productos/index', [
             'titulo'       => 'Productos',
-            'filas'        => $r->resumen($categoria),
+            'filas'        => $r->resumen($categoria, $proveedor),
             'categorias'   => $r->pares('SELECT id, nombre FROM categoria ORDER BY nombre'),
+            'proveedores'  => $r->pares('SELECT id, razon_social AS nombre FROM proveedor ORDER BY razon_social'),
             'categoriaSel' => $categoria,
+            'proveedorSel' => $proveedor,
         ]);
     }
 
@@ -60,6 +66,9 @@ class ProductosController extends CrudController
         }
         if ($r->existeCodigo($d['codigo_barras'], $id)) {
             throw new RuntimeException('ya existe un producto con ese código de barras.');
+        }
+        if ($d['categoria_id'] === '' || $d['proveedor_id'] === '') {
+            throw new RuntimeException('elige la categoría y el proveedor del producto.');
         }
         if ($d['nombre'] === '' || $d['unidad'] === '') {
             throw new RuntimeException('el nombre y la unidad son obligatorios.');

@@ -27,7 +27,7 @@ ksort($totalCat);
       <span>🔍</span>
       <input id="prd-q" placeholder="Buscar por nombre o código…" autocomplete="off">
     </label>
-    <a class="btn y" href="<?= Controller::url('productos/nuevo') ?>">+ Nuevo producto</a>
+    <button type="button" class="btn y" id="pr-nuevo">+ Nuevo producto</button>
   </div>
 
   <div class="prd-filtros">
@@ -51,6 +51,13 @@ ksort($totalCat);
       <article class="prd-item <?= $f['activo'] ? '' : 'off' ?>"
                data-cat="<?= e($f['categoria']) ?>"
                data-act="<?= $f['activo'] ? '1' : '0' ?>"
+               data-id="<?= (int)$f['id'] ?>"
+               data-catid="<?= (int)$f['categoria_id'] ?>"
+               data-provid="<?= (int)$f['proveedor_id'] ?>"
+               data-codigo="<?= e($f['codigo_barras']) ?>"
+               data-nombre="<?= e($f['nombre']) ?>"
+               data-unidad="<?= e($f['unidad']) ?>"
+               data-precio="<?= e($f['precio']) ?>"
                data-txt="<?= e(mb_strtolower($f['nombre'] . ' ' . $f['codigo_barras'])) ?>">
         <div class="prd-top">
           <div class="prd-ico"><?= prdIcono($f['categoria']) ?></div>
@@ -68,7 +75,7 @@ ksort($totalCat);
           <div class="prd-precio"><small>Precio</small><b><?= money($f['precio']) ?></b></div>
           <div class="prd-acts">
             <a class="act" title="Ver precios" href="<?= Controller::url('productos/ver', ['id' => $f['id']]) ?>">👁️</a>
-            <a class="act" title="Editar" href="<?= Controller::url('productos/editar', ['id' => $f['id']]) ?>">✏️</a>
+            <button type="button" class="act pr-editar" title="Editar">✏️</button>
           </div>
         </div>
       </article>
@@ -77,6 +84,51 @@ ksort($totalCat);
 
   <div class="prd-vacio <?= $filas ? '' : 'show' ?>" id="prd-vacio">Sin productos que coincidan</div>
 </div>
+
+<!-- ============ DRAWER: nuevo / editar producto ============ -->
+<div class="dr-fondo" id="dr-fondo"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-hidden="true">
+  <form class="dr-form" id="pr-form" method="post" action="<?= Controller::url('productos/guardar') ?>" style="display:flex">
+    <input type="hidden" name="csrf" value="<?= Controller::csrf() ?>">
+    <input type="hidden" name="id" id="i-id" value="0">
+    <div class="dr-cab">
+      <button type="button" class="dr-cerrar" id="dr-cerrar" aria-label="Cerrar">✕</button>
+      <div class="pv-av" id="f-ico">🛒</div>
+      <h2 id="f-titulo">Nuevo producto</h2>
+    </div>
+    <div class="dr-cuerpo">
+      <div class="pv-campo"><label for="i-nombre">Nombre</label>
+        <input class="dr-input" id="i-nombre" name="nombre" maxlength="120" required></div>
+      <div class="pv-campo"><label for="i-codigo">Código de barras <em>(13 caracteres)</em></label>
+        <input class="dr-input" id="i-codigo" name="codigo_barras" maxlength="13" minlength="13" pattern=".{13}" inputmode="numeric" required></div>
+      <div class="pv-campos2">
+        <div class="pv-campo"><label for="i-cat">Categoría</label>
+          <select class="dr-input" id="i-cat" name="categoria_id" required>
+            <option value="">— Elige —</option>
+            <?php foreach ($categorias as $k => $t): ?><option value="<?= (int)$k ?>"><?= e($t) ?></option><?php endforeach; ?>
+          </select></div>
+        <div class="pv-campo"><label for="i-prov">Proveedor</label>
+          <select class="dr-input" id="i-prov" name="proveedor_id" required>
+            <option value="">— Elige —</option>
+            <?php foreach ($proveedores as $k => $t): ?><option value="<?= (int)$k ?>"><?= e($t) ?></option><?php endforeach; ?>
+          </select></div>
+      </div>
+      <div class="pv-campos2">
+        <div class="pv-campo"><label for="i-unidad">Unidad</label>
+          <input class="dr-input" id="i-unidad" name="unidad" maxlength="20" placeholder="unidad, kg, litro" list="pr-unidades" required>
+          <datalist id="pr-unidades"><option value="unidad"><option value="kg"><option value="litro"><option value="paquete"></datalist></div>
+        <div class="pv-campo"><label for="i-precio">Precio (S/)</label>
+          <input class="dr-input" id="i-precio" name="precio" type="number" step="0.01" min="0" max="99999999.99" required></div>
+      </div>
+      <div class="pv-campo"><label for="i-act">Estado</label>
+        <select class="dr-input" id="i-act" name="activo"><option value="1">Activo</option><option value="0">Inactivo</option></select></div>
+    </div>
+    <div class="dr-acciones">
+      <button type="button" class="btn g flex" id="dr-cancelar">Cancelar</button>
+      <button class="btn y flex">Guardar</button>
+    </div>
+  </form>
+</aside>
 
 <script>
 (function () {
@@ -111,5 +163,36 @@ ksort($totalCat);
   chips('prd-f-cat', function (v) { cat = v; });
   chips('prd-f-est', function (v) { est = v; });
   q.addEventListener('input', aplicar);
+
+  /* ---- Drawer nuevo / editar ---- */
+  var $ = function (id) { return document.getElementById(id); };
+  var fondo = $('dr-fondo'), dr = $('drawer'), ultimo = null;
+  function abrir() { fondo.classList.add('abierto'); dr.classList.add('abierto'); dr.setAttribute('aria-hidden', 'false'); }
+  function cerrar() {
+    fondo.classList.remove('abierto'); dr.classList.remove('abierto'); dr.setAttribute('aria-hidden', 'true');
+    if (ultimo) ultimo.focus();
+  }
+  function formulario(c) {
+    var d = c ? c.dataset : {};
+    $('f-titulo').textContent = c ? 'Editar producto' : 'Nuevo producto';
+    $('f-ico').textContent = c ? c.querySelector('.prd-ico').textContent : '🛒';
+    $('i-id').value = c ? d.id : 0;
+    $('i-nombre').value = c ? d.nombre : '';
+    $('i-codigo').value = c ? d.codigo : '';
+    $('i-cat').value = c ? d.catid : '';
+    $('i-prov').value = c ? d.provid : '';
+    $('i-unidad').value = c ? d.unidad : '';
+    $('i-precio').value = c ? d.precio : '';
+    $('i-act').value = c ? d.act : '1';
+    abrir(); $('i-nombre').focus();
+  }
+  $('pr-nuevo').addEventListener('click', function () { ultimo = this; formulario(null); });
+  cards.forEach(function (c) {
+    c.querySelector('.pr-editar').addEventListener('click', function () { ultimo = this; formulario(c); });
+  });
+  $('dr-cerrar').addEventListener('click', cerrar);
+  $('dr-cancelar').addEventListener('click', cerrar);
+  fondo.addEventListener('click', cerrar);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && dr.classList.contains('abierto')) cerrar(); });
 })();
 </script>
