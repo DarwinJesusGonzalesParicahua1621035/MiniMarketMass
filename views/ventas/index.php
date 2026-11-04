@@ -7,8 +7,8 @@ $dia  = $f['dia'];
 $prev = date('Y-m-d', strtotime("$dia -1 day"));
 $next = date('Y-m-d', strtotime("$dia +1 day"));
 $base = [
-    'fecha' => $dia, 'q' => $f['q'], 'sucursal' => $f['sucursal'], 'tipo' => $f['tipo'], 'medio' => $f['medio'],
-    'caja' => $f['caja'], 'turno' => $f['turno'], 'min' => $f['min'], 'max' => $f['max'], 'todos' => $f['todos'] ? 1 : null,
+    'fecha' => $dia, 'q' => $f['q'], 'sucursal' => $f['sucursal'],
+    'turno' => $f['turno'], 'todos' => $f['todos'] ? 1 : null,
     'orden' => $f['orden'], 'dir' => $f['dir'],
 ];
 $link = fn(array $o = []) => Controller::url('ventas/index',
@@ -43,10 +43,6 @@ $chips = function (string $name, array $ops, $actual): string {
     }
     return $h;
 };
-$medios = ['' => 'Todos'];
-foreach (['EFECTIVO', 'TARJETA', 'YAPE', 'PLIN'] as $m) {
-    $medios[$m] = ucfirst(strtolower($m));
-}
 ?>
 <div class="vt-page">
   <div class="vt-head">
@@ -102,22 +98,7 @@ foreach (['EFECTIVO', 'TARJETA', 'YAPE', 'PLIN'] as $m) {
       <span class="vt-lb">Sucursal</span>
       <?= $chips('sucursal', [0 => 'Todas'] + $op['sucursales'], $f['sucursal']) ?>
     </div>
-    <div class="vt-grp" role="radiogroup" aria-label="Tipo">
-      <span class="vt-lb">Tipo</span>
-      <?= $chips('tipo', ['' => 'Todos', 'BOLETA' => 'Boleta', 'FACTURA' => 'Factura'], $f['tipo']) ?>
-    </div>
-    <div class="vt-grp" role="radiogroup" aria-label="Método de pago">
-      <span class="vt-lb">Método de pago</span>
-      <?= $chips('medio', $medios, $f['medio']) ?>
-    </div>
-    <div class="vt-grp" role="radiogroup" aria-label="Caja">
-      <span class="vt-lb">Caja</span>
-      <?= $chips('caja', [0 => 'Todas'] + $op['cajas'], $f['caja']) ?>
-    </div>
     <div class="vt-grp">
-      <span class="vt-lb">Total (S/)</span>
-      <input class="vt-fld vt-n" type="number" name="min" min="0" step="1" value="<?= $f['min'] !== null ? e($f['min']) : '' ?>" placeholder="Mínimo">
-      <input class="vt-fld vt-n" type="number" name="max" min="0" step="1" value="<?= $f['max'] !== null ? e($f['max']) : '' ?>" placeholder="Máximo">
       <label class="vt-opt"><input type="checkbox" name="todos" value="1" <?= $f['todos'] ? 'checked' : '' ?>><span>Todos los días</span></label>
     </div>
     <div class="vt-act">
