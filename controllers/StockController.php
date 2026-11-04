@@ -49,7 +49,11 @@ class StockController extends Controller
     public function guardar(): void
     {
         [$sucursalId, $productoId] = array_pad(explode('-', (string)($_POST['stock'] ?? ''), 2), 2, '0');
-        try {
+                try {
+            $cant = trim((string)($_POST['cantidad'] ?? ''));
+            if (!preg_match('/^[1-9]\d{0,6}$/', $cant)) {
+                throw new InvalidArgumentException('La cantidad debe ser un número entero mayor que 0, sin decimales.');
+            }
             $u = Auth::user();
             (new MovimientoStock(Database::pdo()))->registrar([
                 'sucursal_id' => $sucursalId,

@@ -34,6 +34,19 @@ $barras = function (array $filas, bool $cap = false) {
     return $h;
 };
 $sumaLista = array_sum(array_map(fn($r) => $r['estado'] === 'EMITIDA' ? (float)$r['total'] : 0, $filas));
+
+$chips = function (string $name, array $ops, $actual): string {
+    $h = '';
+    foreach ($ops as $v => $txt) {
+        $h .= '<label class="vt-opt"><input type="radio" name="' . $name . '" value="' . e($v) . '"'
+            . ((string)$actual === (string)$v ? ' checked' : '') . '><span>' . e($txt) . '</span></label>';
+    }
+    return $h;
+};
+$medios = ['' => 'Todos'];
+foreach (['EFECTIVO', 'TARJETA', 'YAPE', 'PLIN'] as $m) {
+    $medios[$m] = ucfirst(strtolower($m));
+}
 ?>
 <div class="vt-page">
   <div class="vt-head">
@@ -65,58 +78,55 @@ $sumaLista = array_sum(array_map(fn($r) => $r['estado'] === 'EMITIDA' ? (float)$
         <span>Sin ventas el día anterior para comparar</span>
       <?php endif; ?>
     </div>
-    <div class="vt-kpis">
-      <div class="card vt-kpi"><span class="vt-mut">Ventas del día</span><b><?= (int)$rep['hoy']['n'] ?></b></div>
-      <div class="card vt-kpi"><span class="vt-mut">Ticket promedio</span><b><?= $rep['hoy']['n'] ? money($t / $rep['hoy']['n']) : '—' ?></b></div>
-      <div class="card vt-kpi"><span class="vt-mut">Boletas / Facturas</span><b><?= (int)$rep['hoy']['boletas'] ?> / <?= (int)$rep['hoy']['facturas'] ?></b></div>
-    </div>
-    <div class="vt-break">
-      <div class="card vt-bk"><h3>Por sucursal</h3><?= $barras($rep['suc']) ?></div>
-      <div class="card vt-bk"><h3>Por método de pago</h3><?= $barras($rep['pago'], true) ?></div>
-    </div>
+    <div class="card vt-kpi k1"><span>Ventas del día</span><b><?= (int)$rep['hoy']['n'] ?></b></div>
+    <div class="card vt-kpi k2"><span>Ticket promedio</span><b><?= $rep['hoy']['n'] ? money($t / $rep['hoy']['n']) : '—' ?></b></div>
+    <div class="card vt-kpi k3"><span>Boletas / Facturas</span><b><?= (int)$rep['hoy']['boletas'] ?> / <?= (int)$rep['hoy']['facturas'] ?></b></div>
   </section>
 
-  <div class="tw">
-    <form method="get" id="vtFiltros" class="vt-filters">
-      <input type="hidden" name="r" value="ventas/index">
-      <input type="hidden" name="orden" value="<?= e($f['orden']) ?>">
-      <input type="hidden" name="dir" value="<?= e($f['dir']) ?>">
-      <?php if ($f['turno']): ?><input type="hidden" name="turno" value="<?= (int)$f['turno'] ?>"><?php endif; ?>
-      <label class="wide">Buscar
-        <input class="vt-fld" name="q" type="search" value="<?= e($f['q']) ?>" placeholder="Comprobante, cliente o producto">
-      </label>
-      <label>Sucursal
-        <select class="vt-fld" name="sucursal"><option value="0">Todas</option>
-          <?php foreach ($op['sucursales'] as $id => $n): ?><option value="<?= (int)$id ?>" <?= $f['sucursal'] == $id ? 'selected' : '' ?>><?= e($n) ?></option><?php endforeach; ?>
-        </select>
-      </label>
-      <label>Tipo
-        <select class="vt-fld" name="tipo"><option value="">Boleta y factura</option>
-          <option value="BOLETA" <?= $f['tipo'] === 'BOLETA' ? 'selected' : '' ?>>Boleta</option>
-          <option value="FACTURA" <?= $f['tipo'] === 'FACTURA' ? 'selected' : '' ?>>Factura</option>
-        </select>
-      </label>
-      <label>Método de pago
-        <select class="vt-fld" name="medio"><option value="">Todos</option>
-          <?php foreach (['EFECTIVO', 'PLIN', 'TARJETA', 'YAPE'] as $m): ?><option value="<?= $m ?>" <?= $f['medio'] === $m ? 'selected' : '' ?>><?= ucfirst(strtolower($m)) ?></option><?php endforeach; ?>
-        </select>
-      </label>
-      <label>Caja
-        <select class="vt-fld" name="caja"><option value="0">Todas</option>
-          <?php foreach ($op['cajas'] as $id => $n): ?><option value="<?= (int)$id ?>" <?= $f['caja'] == $id ? 'selected' : '' ?>><?= e($n) ?></option><?php endforeach; ?>
-        </select>
-      </label>
-      <label>Total mínimo (S/)
-        <input class="vt-fld" type="number" name="min" min="0" step="1" value="<?= $f['min'] !== null ? e($f['min']) : '' ?>" placeholder="0">
-      </label>
-      <label>Total máximo (S/)
-        <input class="vt-fld" type="number" name="max" min="0" step="1" value="<?= $f['max'] !== null ? e($f['max']) : '' ?>" placeholder="Sin límite">
-      </label>
-      <label class="vt-chk"><input type="checkbox" name="todos" value="1" <?= $f['todos'] ? 'checked' : '' ?>> Todos los días</label>
-      <button class="btn y" type="submit">Filtrar</button>
-      <a class="vt-link" href="<?= Controller::url('ventas/index', ['fecha' => $dia]) ?>">Limpiar filtros</a>
-    </form>
+  <section class="vt-break">
+    <div class="card vt-bk s"><h3>Por sucursal</h3><?= $barras($rep['suc']) ?></div>
+    <div class="card vt-bk p"><h3>Por método de pago</h3><?= $barras($rep['pago'], true) ?></div>
+  </section>
 
+  <form method="get" id="vtFiltros" class="vt-filters">
+    <input type="hidden" name="r" value="ventas/index">
+    <input type="hidden" name="orden" value="<?= e($f['orden']) ?>">
+    <input type="hidden" name="dir" value="<?= e($f['dir']) ?>">
+    <?php if ($f['turno']): ?><input type="hidden" name="turno" value="<?= (int)$f['turno'] ?>"><?php endif; ?>
+
+    <div class="vt-grp">
+      <span class="vt-lb">Buscar</span>
+      <input class="vt-fld vt-q" name="q" type="search" value="<?= e($f['q']) ?>" placeholder="Comprobante, cliente o producto">
+    </div>
+    <div class="vt-grp" role="radiogroup" aria-label="Sucursal">
+      <span class="vt-lb">Sucursal</span>
+      <?= $chips('sucursal', [0 => 'Todas'] + $op['sucursales'], $f['sucursal']) ?>
+    </div>
+    <div class="vt-grp" role="radiogroup" aria-label="Tipo">
+      <span class="vt-lb">Tipo</span>
+      <?= $chips('tipo', ['' => 'Todos', 'BOLETA' => 'Boleta', 'FACTURA' => 'Factura'], $f['tipo']) ?>
+    </div>
+    <div class="vt-grp" role="radiogroup" aria-label="Método de pago">
+      <span class="vt-lb">Método de pago</span>
+      <?= $chips('medio', $medios, $f['medio']) ?>
+    </div>
+    <div class="vt-grp" role="radiogroup" aria-label="Caja">
+      <span class="vt-lb">Caja</span>
+      <?= $chips('caja', [0 => 'Todas'] + $op['cajas'], $f['caja']) ?>
+    </div>
+    <div class="vt-grp">
+      <span class="vt-lb">Total (S/)</span>
+      <input class="vt-fld vt-n" type="number" name="min" min="0" step="1" value="<?= $f['min'] !== null ? e($f['min']) : '' ?>" placeholder="Mínimo">
+      <input class="vt-fld vt-n" type="number" name="max" min="0" step="1" value="<?= $f['max'] !== null ? e($f['max']) : '' ?>" placeholder="Máximo">
+      <label class="vt-opt"><input type="checkbox" name="todos" value="1" <?= $f['todos'] ? 'checked' : '' ?>><span>Todos los días</span></label>
+    </div>
+    <div class="vt-act">
+      <button class="vt-go" type="submit">Filtrar</button>
+      <a class="vt-link" href="<?= Controller::url('ventas/index', ['fecha' => $dia]) ?>">Limpiar filtros</a>
+    </div>
+  </form>
+
+  <div class="tw">
     <div class="scroll">
       <table>
         <thead><tr>

@@ -5,7 +5,7 @@ class ClientesController extends CrudController
     {
         return [
             'carpeta' => 'clientes', 'titulo' => 'Clientes', 'singular' => 'cliente',
-            'repo' => new ClienteRepository(), 'nuevo' => 'clientes/nuevo', 'acciones' => ['editar', 'eliminar'],
+                        'repo' => new ClienteRepository(),
             'columnas' => [
                 'id' => ['#'], 'tipo_documento' => ['Tipo doc.', 'etiqueta'], 'numero_documento' => ['N.º documento'],
                 'nombre' => ['Nombre'], 'ventas' => ['Compras'],

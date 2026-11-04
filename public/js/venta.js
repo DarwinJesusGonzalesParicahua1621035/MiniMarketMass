@@ -168,7 +168,14 @@
       <div class="mrow"><button class="btn g" type="button" id="pcancel">Cancelar</button><button class="btn y" type="button" id="pok">Confirmar venta</button></div>`);
     addPay('EFECTIVO');
   }
-  function addPay(m) {
+   function addPay(m) {
+    // Un solo pago por cada medio: si ya existe, solo se lleva al cajero a esa fila.
+    const i = P.findIndex(p => p.m === m);
+    if (i >= 0) {
+      const inp = document.querySelector(`[data-monto="${i}"]`);
+      if (inp) { inp.focus(); inp.select(); }
+      return toast(`Ya agregaste ${cap(m)}. Solo se permite un pago por medio.`, true);
+    }
     const falta = Math.max(0, r2(total() - pagado()));
     P.push({m, monto: falta > 0 ? falta : '', ref: ''});
     renderPay();
@@ -178,6 +185,8 @@
       <input class="inp" type="number" step="0.01" min="0" value="${p.monto}" placeholder="Monto" data-monto="${i}">
       ${p.m === 'EFECTIVO' ? '<span style="font-size:12px;color:var(--g3)">Sin referencia</span>' : `<input class="inp" maxlength="30" placeholder="N.º operación" value="${esc(p.ref)}" data-ref="${i}">`}
       <button type="button" class="x" data-quitar="${i}">✕</button></div>`).join('');
+    // Marca con ✓ los medios que ya están agregados.
+    document.querySelectorAll('[data-pay]').forEach(b => b.classList.toggle('on', P.some(p => p.m === b.dataset.pay)));
     renderSuma();
   }
   function renderSuma() {

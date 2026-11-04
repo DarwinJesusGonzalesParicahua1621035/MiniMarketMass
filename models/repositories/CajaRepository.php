@@ -48,6 +48,22 @@ class CajaRepository extends Repository
         if ($nombre === '' || mb_strlen($nombre) > 40) {
             throw new InvalidArgumentException('el nombre es obligatorio y tiene máximo 40 caracteres.');
         }
-        return $this->insertar(['sucursal_id' => $sucursalId, 'nombre' => $nombre]);
+                return $this->insertar(['sucursal_id' => $sucursalId, 'nombre' => $nombre]);
+    }
+
+    // Cajas de la sucursal del empleado, con su estado: ocupada = 1 si ya tiene un turno abierto.
+    public function delEmpleado(int $empleadoId): array
+    {
+        $s = $this->db()->prepare("SELECT c.id, c.nombre, s.nombre AS sucursal,
+                (h.id IS NOT NULL) AS ocupada, r.nombre AS responsable
+            FROM empleado e
+            JOIN caja c ON c.sucursal_id = e.sucursal_id
+            JOIN sucursal s ON s.id = c.sucursal_id
+            LEFT JOIN historia_caja h ON h.caja_id = c.id AND h.estado = 'ABIERTA'
+            LEFT JOIN empleado r ON r.id = h.empleado_id
+            WHERE e.id = ?
+            ORDER BY c.nombre");
+        $s->execute([$empleadoId]);
+        return $s->fetchAll();
     }
 }

@@ -89,13 +89,3 @@ $sumaMedios = array_sum(array_column($medios, 'total'));
     </ul>
   </div>
 </div>
-
-<section class="pie">
-  <div><p>Stock total</p><h3><?= number_format($k['stock_total'], 0) ?></h3><small>productos en tienda</small></div>
-  <div><p>Productos más vendidos</p>
-    <?php foreach ($top as $i => $t): ?><small><?= $i + 1 ?>. <?= e($t['nombre']) ?></small><?php endforeach; ?>
-    <?php if (!$top): ?><small>Sin ventas aún</small><?php endif; ?>
-  </div>
-  <div><p>Clientes registrados</p><h3><?= number_format($k['clientes']) ?></h3><small>en el sistema</small></div>
-  <div><p>Ticket promedio hoy</p><h3><?= money($k['ticket']) ?></h3><small>por comprobante</small></div>
-</section>

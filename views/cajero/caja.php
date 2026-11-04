@@ -18,13 +18,27 @@ $cobrado = $turno ? (array_sum(array_map('floatval', $resumen['medios'])) ?: 1) 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mi caja · Tiendas Mass</title>
 <link rel="stylesheet" href="<?= Controller::base() ?>/css/app.css">
+<link rel="stylesheet" href="<?= Controller::base() ?>/css/cajero-abrir.css">
 </head>
 <body class="cajero">
 <?php $activo = 'caja'; require __DIR__ . '/_nav.php'; ?>
+<?php
+/* Etapa del turno: 0 = sin asistencia · 1 = asistencia lista · 2 = caja abierta */
+$fase = $turno ? 2 : (!empty($asistencia) ? 1 : 0);
+$h = (int)date('G');
+$saludo = $h < 12 ? 'Buenos días' : ($h < 19 ? 'Buenas tardes' : 'Buenas noches');
+$nombre1 = explode(' ', trim($user['nombre']))[0];
+?>
 <main class="micaja">
   <header>
     <button id="menu" type="button">☰</button>
-    <h1>Mi caja<small>Resumen de tu turno</small></h1>
+    <?php if ($fase === 2): ?>
+      <h1>Mi caja<small>Resumen de tu turno</small></h1>
+    <?php elseif ($fase === 0): ?>
+      <h1><?= e($saludo) ?>, <?= e($nombre1) ?><small>Sigue estos pasos para empezar tu turno</small></h1>
+    <?php else: ?>
+      <h1>Abrir caja<small>Elige tu caja y cuenta el efectivo con el que empiezas</small></h1>
+    <?php endif; ?>
     <?php if ($sucursal): ?><span class="chip">🏬 <?= e($sucursal) ?></span><?php endif; ?>
     <span class="chip" id="clock">🕘</span>
   </header>
@@ -32,28 +46,109 @@ $cobrado = $turno ? (array_sum(array_map('floatval', $resumen['medios'])) ?: 1) 
   <?php if ($flash): ?><div class="flash <?= $flash[0] === 'err' ? 'err' : '' ?>"><?= e($flash[1]) ?></div><?php endif; ?>
 
   <?php if (!$turno): ?>
-    <form class="card formulario" method="post" action="<?= Controller::url('caja/abrir') ?>">
-      <h3>🔒 Tu caja está cerrada</h3>
-      <small style="color:var(--g4)">Elige una caja y el dinero con el que empiezas.</small>
-      <input type="hidden" name="csrf" value="<?= e(Controller::csrf()) ?>">
-      <?php if (!$cajas): ?>
-        <div class="empty">Todas las cajas ya tienen un turno abierto</div>
-      <?php else: ?>
-        <div class="campos">
-          <label>Caja
-            <select name="caja_id" required>
-              <?php foreach ($cajas as $id => $t): ?>
-                <option value="<?= (int)$id ?>"><?= e($t) ?></option>
-              <?php endforeach; ?>
-            </select>
-          </label>
-          <label>Monto inicial (S/)
-            <input type="number" name="monto_inicial" step="0.01" min="0" placeholder="Ej: 100.00" required>
-          </label>
+
+    <!-- Pasos del turno -->
+    <div class="steps">
+      <?php foreach ([[1, 'Asistencia'], [2, 'Abrir caja'], [3, 'Operar']] as $i => [$n, $t]):
+          $cls = $fase > $i ? 'ok' : ($fase === $i ? 'on' : ''); ?>
+        <div class="step <?= $cls ?>"><i><?= $fase > $i ? '✓' : $n ?></i><?= e($t) ?></div>
+      <?php endforeach; ?>
+    </div>
+
+    <?php if ($fase === 0): ?>
+
+      <!-- ETAPA 1: registrar asistencia -->
+      <form class="card asist" method="post" action="<?= Controller::url('cajero/asistencia') ?>">
+        <input type="hidden" name="csrf" value="<?= e(Controller::csrf()) ?>">
+        <div class="big">🕘</div>
+        <div>
+          <h2>Registra tu asistencia</h2>
+          <p>Marca tu entrada para poder abrir caja.</p>
         </div>
-        <div class="row"><button class="btn y" type="submit">Abrir caja</button></div>
-      <?php endif; ?>
-    </form>
+        <button class="btn y" type="submit">Registrar asistencia</button>
+      </form>
+
+    <?php else:
+        $libres = array_filter($cajas, fn($c) => !$c['ocupada']);
+        $hora   = date('H:i', strtotime($asistencia['entrada']));
+    ?>
+
+      <!-- ETAPA 2: elegir caja y abrir -->
+      <div class="chip-ok">✓ Entrada registrada a las <?= e($hora) ?> · <?= e(ucfirst(mb_strtolower($asistencia['estado']))) ?></div>
+
+      <form class="card formulario cj-form" method="post" action="<?= Controller::url('caja/abrir') ?>" style="max-width:780px">
+        <h3>Datos de apertura</h3>
+        <input type="hidden" name="csrf" value="<?= e(Controller::csrf()) ?>">
+
+        <?php if (!$cajas): ?>
+          <div class="empty">Tu sucursal no tiene cajas registradas</div>
+        <?php else: ?>
+
+          <p class="cj-sub">1 · Elige tu caja</p>
+          <div class="cj-grid" role="radiogroup" aria-label="Caja">
+            <?php foreach ($cajas as $c): $uso = (bool)$c['ocupada']; ?>
+              <label class="cj-item <?= $uso ? 'uso' : '' ?>">
+                <input type="radio" name="caja_id" value="<?= (int)$c['id'] ?>" data-n="<?= e($c['nombre']) ?>"
+                       <?= $uso ? 'disabled' : 'required' ?>>
+                <span class="cj-card">
+                  <span class="cj-ico">🖥️</span>
+                  <b><?= e($c['nombre']) ?></b>
+                  <small><?= e($c['sucursal']) ?></small>
+                  <em class="cj-est"><?= $uso ? 'En uso · ' . e($c['responsable']) : 'Libre' ?></em>
+                  <span class="cj-ck">✓</span>
+                </span>
+              </label>
+            <?php endforeach; ?>
+          </div>
+
+          <?php if (!$libres): ?>
+            <div class="empty" style="margin-top:14px">Todas las cajas ya tienen un turno abierto</div>
+          <?php else: ?>
+
+            <p class="cj-sub">2 · Monto inicial</p>
+            <div class="campos cj-monto">
+              <label>Efectivo con el que empiezas (S/)
+                <input type="number" name="monto_inicial" id="cj-monto" step="0.01" min="0" value="100.00" placeholder="0.00" required>
+              </label>
+            </div>
+            <div class="cj-montos">
+              <?php foreach ([50, 100, 200, 300] as $v): ?>
+                <button type="button" class="cj-mchip" data-v="<?= $v ?>.00">S/ <?= $v ?></button>
+              <?php endforeach; ?>
+            </div>
+
+            <div class="cj-resumen" id="cj-res"></div>
+            <div class="row"><button class="btn y" type="submit">Abrir caja</button></div>
+
+          <?php endif; ?>
+        <?php endif; ?>
+      </form>
+
+      <script>
+      (function () {
+        var res = document.getElementById('cj-res');
+        if (!res) return;
+        var monto = document.getElementById('cj-monto'),
+            radios = [].slice.call(document.querySelectorAll('.cj-form input[name=caja_id]')),
+            chips = [].slice.call(document.querySelectorAll('.cj-mchip'));
+
+        function resumen() {
+          var m = monto.value.trim().replace(',', '.'),
+              ok = /^\d+(\.\d{1,2})?$/.test(m),
+              sel = radios.filter(function (r) { return r.checked; })[0];
+          chips.forEach(function (c) { c.classList.toggle('on', ok && parseFloat(c.dataset.v) === parseFloat(m)); });
+          res.innerHTML = !sel ? 'Elige una caja para continuar.'
+            : 'Abrirás <b>' + sel.dataset.n + '</b> con <b>' + (ok ? 'S/ ' + Number(m).toFixed(2) : 'S/ —') + '</b>.';
+        }
+
+        radios.forEach(function (r) { r.addEventListener('change', resumen); });
+        chips.forEach(function (b) { b.addEventListener('click', function () { monto.value = b.dataset.v; resumen(); }); });
+        monto.addEventListener('input', resumen);
+        resumen();
+      })();
+      </script>
+
+    <?php endif; ?>
 
   <?php else: ?>
     <div class="hero">
@@ -123,7 +218,7 @@ $cobrado = $turno ? (array_sum(array_map('floatval', $resumen['medios'])) ?: 1) 
           <input type="hidden" name="historia_id" value="<?= (int)$turno['id'] ?>">
           <div class="campos">
             <label>Dinero contado (S/)
-              <input type="number" name="monto_final" id="contado" step="0.01" min="0" required>
+                <input type="number" name="contado" id="contado" step="0.01" min="0" required>
             </label>
           </div>
           <p style="margin-top:12px;font-size:13px">Esperado: <b><?= money($esperado) ?></b> <span id="dif"></span></p>

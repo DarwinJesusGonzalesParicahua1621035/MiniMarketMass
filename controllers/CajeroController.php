@@ -33,19 +33,71 @@ class CajeroController extends Controller
         $this->render('cajero/venta', ['titulo' => 'Nueva venta', 'cfg' => $cfg] + $b, false);
     }
 
-    // Mi caja: estado del turno, resumen de ventas y cierre.
+    // Mi caja: según la etapa del turno muestra asistencia, apertura de caja o el resumen.
     public function caja(): void
     {
         $b = $this->contexto();
+        $uid = (int)Auth::user()['id'];
         $datos = ['titulo' => 'Mi caja'] + $b;
         if ($t = $b['turno']) {
             $pos = new PosRepository();
             $datos['resumen'] = $pos->resumenTurno((int)$t['id']);
             $datos['ventas']  = $pos->ventasTurno((int)$t['id']);
         } else {
-            $datos['cajas'] = (new CajaRepository())->libres();
+            $datos['asistencia'] = (new AsistenciaRepository())->deHoy($uid);
+            $datos['cajas'] = $datos['asistencia'] ? (new CajaRepository())->delEmpleado($uid) : [];
         }
         $this->render('cajero/caja', $datos, false);
+    }
+
+    // Etapa 1 del turno: el cajero marca su entrada.
+    public function asistencia(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                (new AsistenciaRepository())->registrarEntrada((int)Auth::user()['id']);
+                $this->flash('Asistencia registrada');
+            } catch (InvalidArgumentException | RuntimeException | PDOException $e) {
+                $this->flash('No se pudo registrar: ' . $this->mensaje($e), 'err');
+            }
+        }
+        $this->redirect('cajero/caja');
+    }
+
+    // Reportar una incidencia (solo con la caja abierta). Se guarda en la sucursal del turno.
+    public function incidencia(): void
+    {
+        $volver = (string)($_POST['volver'] ?? '');
+        if (!in_array($volver, ['cajero/venta', 'cajero/ventas', 'cajero/caja', 'cajero/clientes'], true)) {
+            $volver = 'cajero/caja';
+        }
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $b = $this->contexto();
+            $tipo = (string)($_POST['tipo'] ?? '');
+            $desc = trim((string)($_POST['descripcion'] ?? ''));
+            try {
+                if (!$b['turno']) {
+                    throw new RuntimeException('abre una caja para reportar incidencias.');
+                }
+                if (!in_array($tipo, ['Equipos', 'Seguridad', 'Stock', 'Otro'], true)) {
+                    throw new InvalidArgumentException('elige el tipo de incidencia.');
+                }
+                if ($desc === '' || mb_strlen($desc) > 250) {
+                    throw new InvalidArgumentException('cuéntanos qué pasó (máximo 250 caracteres).');
+                }
+                (new IncidenteRepository())->insertar([
+                    'sucursal_id' => (int)$b['turno']['sucursal_id'],
+                    'tipo'        => $tipo,
+                    'descripcion' => $desc,
+                    'fecha'       => date('Y-m-d H:i:s'),
+                    'estado'      => 'ABIERTO',
+                ]);
+                $this->flash('Incidencia enviada al administrador');
+            } catch (InvalidArgumentException | RuntimeException | PDOException $e) {
+                $this->flash('No se pudo enviar: ' . $this->mensaje($e), 'err');
+            }
+        }
+        $this->redirect($volver);
     }
 
     // Mis ventas: comprobantes del cajero en un día.
@@ -145,6 +197,8 @@ class CajeroController extends Controller
             ]);
         } catch (InvalidArgumentException | RuntimeException | PDOException $e) {
             $this->json(['ok' => false, 'error' => $this->mensaje($e)], 422);
+        } catch (Throwable $e) {
+            $this->json(['ok' => false, 'error' => 'Error interno: ' . $e->getMessage()], 500);
         }
     }
 
@@ -159,6 +213,7 @@ class CajeroController extends Controller
 
     private function json(array $datos, int $codigo = 200): void
     {
+        if (ob_get_length()) { ob_clean(); }
         http_response_code($codigo);
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode($datos, JSON_UNESCAPED_UNICODE);
