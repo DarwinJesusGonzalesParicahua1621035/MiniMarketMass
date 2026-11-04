@@ -1,4 +1,8 @@
 <?php
+/**
+ * Sucursales — Configuración admin.
+ * FERNANDEZ CHAUCAYANQUI JEAN MICHEL
+ */
 class SucursalesController extends CrudController
 {
     protected function config(): array

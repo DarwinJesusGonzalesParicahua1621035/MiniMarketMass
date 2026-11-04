@@ -4,7 +4,7 @@ $menu = [
     'Operaciones'   => [['ventas', '🧾', 'Ventas'], ['caja', '💵', 'Cajas']],
     'Inventario'    => [['productos', '📦', 'Productos'], ['categorias', '🏷️', 'Categorías'], ['proveedores', '🏭', 'Proveedores'], ['stock', '🗃️', 'Stock']],
     'Personas'      => [['clientes', '👥', 'Clientes'], ['empleados', '🧑‍💼', 'Empleados'], ['asistencia', '🕘', 'Asistencia']],
-    'Configuración' => [['sucursales', '🏬', 'Sucursales'], ['incidentes', '⚠️', 'Incidentes']],
+    'Configuración' => [['configuracion', '⚙️', 'Panel'], ['sucursales', '🏬', 'Sucursales'], ['incidentes', '⚠️', 'Incidentes']],
 ];
 $actual = explode('/', $_GET['r'] ?? 'dashboard/index')[0];
 ?>
