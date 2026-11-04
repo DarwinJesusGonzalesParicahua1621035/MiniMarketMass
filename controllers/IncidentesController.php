@@ -1,4 +1,8 @@
 <?php
+/**
+ * Incidentes — Configuración admin.
+ * FERNANDEZ CHAUCAYANQUI JEAN MICHEL
+ */
 class IncidentesController extends CrudController
 {
     protected function config(): array

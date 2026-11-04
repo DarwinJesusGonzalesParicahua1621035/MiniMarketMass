@@ -842,3 +842,36 @@ main.micaja .btn.y{box-shadow:0 6px 16px rgba(255,196,0,.35)}
 .mp-pct{display:flex;flex-wrap:wrap;gap:2px 12px;margin-top:6px;font-size:11px;color:var(--g4)}
 .mp-pct b{color:var(--k)}
 .leyenda-med{margin-top:16px;padding-top:12px;border-top:1px solid var(--g2)}
+
+/* ===================================================
+   CONFIGURACIÓN (hub + sucursales + incidentes)
+   FERNANDEZ CHAUCAYANQUI JEAN MICHEL
+   =================================================== */
+.cfg-hero{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;background:linear-gradient(118deg,#0A1233 0%,#1F4FD8 58%,#173a9a 100%);color:#fff;border-radius:18px;padding:24px 28px;margin-bottom:18px;position:relative;overflow:hidden}
+.cfg-hero::after{content:"";position:absolute;top:-20%;right:12%;width:110px;height:140%;background:var(--y);opacity:.92;transform:skewX(-22deg);pointer-events:none}
+.cfg-hero>*{position:relative;z-index:1}
+.cfg-eyebrow{font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;opacity:.75;margin-bottom:6px}
+.cfg-hero h2{font-size:26px;letter-spacing:-.5px;line-height:1.15}
+.cfg-hero p{font-size:14px;opacity:.85;margin-top:6px;max-width:520px}
+.cfg-hero>span{background:rgba(255,255,255,.16);padding:8px 14px;border-radius:999px;font-size:13px;font-weight:700;white-space:nowrap}
+.cfg-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:18px}
+.cfg-kpi{background:#fff;border:1px solid var(--g2);border-radius:16px;padding:18px 20px}
+.cfg-kpi p{font-size:13px;color:var(--g4);font-weight:600}
+.cfg-kpi h3{font-size:30px;letter-spacing:-1px;margin:6px 0 4px}
+.cfg-kpi small{font-size:12px;color:var(--g3)}
+.cfg-mods{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.cfg-mod{display:flex;gap:16px;align-items:flex-start;background:#fff;border:1px solid var(--g2);border-radius:18px;padding:22px;transition:border-color .15s,box-shadow .15s,transform .15s}
+.cfg-mod:hover{border-color:var(--y);box-shadow:0 10px 28px rgba(15,17,21,.08);transform:translateY(-2px)}
+.cfg-mod-ico{width:56px;height:56px;border-radius:16px;background:var(--y2);display:grid;place-items:center;font-size:28px;flex-shrink:0}
+.cfg-mod-body h3{font-size:18px;letter-spacing:-.3px}
+.cfg-mod-body p{font-size:14px;color:var(--g4);margin:8px 0 14px;line-height:1.45}
+.cfg-mod-cta{font-size:13px;font-weight:700;color:var(--b)}
+.cfg-panel{margin-bottom:20px}
+.suc-meta{display:flex;gap:6px;flex-wrap:wrap;padding:0 16px 14px}
+.suc-item .suc-info{padding-bottom:10px}
+@media(max-width:700px){
+  .cfg-hero{padding:20px}
+  .cfg-hero::after{display:none}
+  .cfg-hero h2{font-size:22px}
+}
+@media(prefers-reduced-motion:reduce){.cfg-mod,.suc-item{transition:none}}

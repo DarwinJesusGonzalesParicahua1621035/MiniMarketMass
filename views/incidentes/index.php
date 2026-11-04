@@ -1,5 +1,8 @@
 <?php
-// views/incidentes/index.php
+/**
+ * Interfaz de Incidentes (Configuración · admin).
+ * FERNANDEZ CHAUCAYANQUI JEAN MICHEL
+ */
 $ahora = time();
 $hoy   = date('Y-m-d');
 $sucs  = ($c['campos']['sucursal_id']['opciones'])();   // id => nombre
@@ -30,6 +33,15 @@ ksort($tipos);
 ?>
 <div id="incRoot">
 
+  <section class="cfg-hero">
+    <div>
+      <p class="cfg-eyebrow">Configuración</p>
+      <h2>Incidentes</h2>
+      <p>Seguimiento operativo de reportes por sucursal, tipo y estado.</p>
+    </div>
+    <span><?= (int)$nAb ?> abierto<?= $nAb === 1 ? '' : 's' ?></span>
+  </section>
+
   <div class="inc-stats">
     <div class="inc-stat warn"><i></i><div><b><?= $nAb ?></b><span>Abiertos</span></div></div>
     <div class="inc-stat bad"><i></i><div><b><?= $nTarde ?></b><span>Abiertos hace más de 24 h</span></div></div>
@@ -37,10 +49,10 @@ ksort($tipos);
     <div class="inc-stat ok"><i></i><div><b><?= $nRes ?></b><span>Resueltos</span></div></div>
   </div>
 
-  <div class="inc-panel">
+  <div class="inc-panel cfg-panel">
     <div class="inc-head">
       <div class="inc-row">
-        <h3>Incidentes <span class="tag b" id="incCount"><?= count($filas) ?></span></h3>
+        <h3>Listado <span class="tag b" id="incCount"><?= count($filas) ?></span></h3>
         <input class="inc-search" id="incBuscar" type="search" placeholder="Buscar en la descripción">
         <button type="button" class="btn y" id="incNuevo">+ Reportar incidente</button>
       </div>
