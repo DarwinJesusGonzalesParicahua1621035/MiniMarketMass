@@ -227,6 +227,13 @@ body.cajero #toast.on{transform:translateX(-50%);opacity:1}body.cajero #toast.ba
 .vt-bar i{display:block;height:100%;background:var(--y);border-radius:99px}
 .vt-bk.s .vt-bar i{background:var(--pu2)}
 .vt-bk.p .vt-bar i{background:var(--te2)}
+.vt-break{align-items:start}
+.vt-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+.vt-tab{border:1.5px solid rgba(14,138,150,.35);background:#fff;color:var(--k);border-radius:999px;padding:7px 14px;font-size:13px;font-family:inherit;cursor:pointer;transition:.12s}
+.vt-tab:hover{border-color:var(--te2)}
+.vt-tab.on{background:var(--te2);border-color:var(--te2);color:#fff;font-weight:700}
+.vt-tab:focus-visible{outline:2px solid var(--b);outline-offset:2px}
+.vt-panel[hidden]{display:none}
 .vt-filters{background:#fff;border:1px solid var(--g2);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:16px;margin-bottom:14px}
 .vt-grp{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .vt-lb{width:110px;flex-shrink:0;font-size:12px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.5px}

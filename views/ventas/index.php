@@ -20,11 +20,11 @@ $t  = (float)$rep['hoy']['total'];
 $pt = (float)$rep['ayer']['total'];
 $delta = $pt > 0 ? ($t - $pt) / $pt * 100 : null;
 
-$barras = function (array $filas, bool $cap = false) {
+$barras = function (array $filas, bool $cap = false, ?float $max = null) {
     if (!$filas) {
         return '<div class="vt-mut">Sin ventas este día.</div>';
     }
-    $max = max(1, (float)$filas[0]['t']);
+    $max = max(1, $max ?? (float)$filas[0]['t']);
     $h = '';
     foreach ($filas as $r) {
         $n = $cap ? ucfirst(strtolower($r['n'])) : $r['n'];
@@ -79,10 +79,48 @@ $chips = function (string $name, array $ops, $actual): string {
     <div class="card vt-kpi k3"><span>Boletas / Facturas</span><b><?= (int)$rep['hoy']['boletas'] ?> / <?= (int)$rep['hoy']['facturas'] ?></b></div>
   </section>
 
+    <?php
+    // Máximo global para que las barras de todas las sucursales sean comparables
+    $maxPago = 1;
+    $activa = null;
+    foreach ($rep['pago'] as $nombre => $lista) {
+        foreach ($lista as $p) { $maxPago = max($maxPago, (float)$p['t']); }
+        // Pestaña inicial: la primera sucursal que tenga ventas
+        if ($activa === null && $lista) { $activa = $nombre; }
+    }
+    $activa = $activa ?? (array_key_first($rep['pago']) ?? '');
+  ?>
   <section class="vt-break">
     <div class="card vt-bk s"><h3>Por sucursal</h3><?= $barras($rep['suc']) ?></div>
-    <div class="card vt-bk p"><h3>Por método de pago</h3><?= $barras($rep['pago'], true) ?></div>
+    <div class="card vt-bk p" id="vtPagos">
+      <h3>Por método de pago</h3>
+      <div class="vt-tabs" role="tablist">
+        <?php foreach ($rep['pago'] as $nombre => $lista): $on = $nombre === $activa; ?>
+          <button type="button" role="tab" class="vt-tab<?= $on ? ' on' : '' ?>"
+                  data-tab="<?= e($nombre) ?>" aria-selected="<?= $on ? 'true' : 'false' ?>"><?= e($nombre) ?></button>
+        <?php endforeach; ?>
+      </div>
+      <?php foreach ($rep['pago'] as $nombre => $lista): ?>
+        <div class="vt-panel" data-panel="<?= e($nombre) ?>" <?= $nombre === $activa ? '' : 'hidden' ?>>
+          <?= $barras($lista, true, $maxPago) ?>
+        </div>
+      <?php endforeach; ?>
+    </div>
   </section>
+  <script>
+    document.querySelectorAll('#vtPagos .vt-tab').forEach(function (b) {
+      b.addEventListener('click', function () {
+        document.querySelectorAll('#vtPagos .vt-tab').forEach(function (x) {
+          var on = x === b;
+          x.classList.toggle('on', on);
+          x.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+        document.querySelectorAll('#vtPagos .vt-panel').forEach(function (p) {
+          p.hidden = p.getAttribute('data-panel') !== b.getAttribute('data-tab');
+        });
+      });
+    });
+  </script>
 
   <form method="get" id="vtFiltros" class="vt-filters">
     <input type="hidden" name="r" value="ventas/index">
