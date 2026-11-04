@@ -123,20 +123,36 @@ class VentaRepository extends Repository
             return $s->fetch();
         };
 
-        $s = $db->prepare("SELECT s.nombre AS n, SUM(v.total) AS t FROM venta v
-            JOIN sucursal s ON s.id = v.sucursal_id
-            WHERE v.estado = 'EMITIDA' AND v.fecha >= ? AND v.fecha < ?
-            GROUP BY s.id, s.nombre ORDER BY t DESC");
+               // Todas las sucursales, incluso sin ventas ese día (LEFT JOIN con el filtro en el ON)
+        $s = $db->prepare("SELECT s.id, s.nombre AS n, COALESCE(SUM(v.total), 0) AS t
+            FROM sucursal s
+            LEFT JOIN venta v ON v.sucursal_id = s.id AND v.estado = 'EMITIDA'
+                AND v.fecha >= ? AND v.fecha < ?
+            GROUP BY s.id, s.nombre
+            ORDER BY t DESC, s.nombre");
         $s->execute([$dia, $fin]);
         $suc = $s->fetchAll();
 
-        $s = $db->prepare("SELECT pv.medio_pago AS n, SUM(pv.monto) AS t FROM pago_venta pv
+        // Métodos de pago por sucursal
+        $s = $db->prepare("SELECT v.sucursal_id AS sid, pv.medio_pago AS n, SUM(pv.monto) AS t
+            FROM pago_venta pv
             JOIN venta v ON v.id = pv.venta_id
             WHERE v.estado = 'EMITIDA' AND v.fecha >= ? AND v.fecha < ?
-            GROUP BY pv.medio_pago ORDER BY t DESC");
+            GROUP BY v.sucursal_id, pv.medio_pago
+            ORDER BY t DESC");
         $s->execute([$dia, $fin]);
 
-        return ['hoy' => $resumen($dia, $fin), 'ayer' => $resumen($ant, $dia), 'suc' => $suc, 'pago' => $s->fetchAll()];
+        // Una entrada por cada sucursal (vacía si no tuvo pagos)
+        $pago = [];
+        foreach ($suc as $x) {
+            $pago[$x['n']] = [];
+        }
+        $nombres = array_column($suc, 'n', 'id');
+        foreach ($s->fetchAll() as $r) {
+            $pago[$nombres[$r['sid']]][] = ['n' => $r['n'], 't' => $r['t']];
+        }
+
+        return ['hoy' => $resumen($dia, $fin), 'ayer' => $resumen($ant, $dia), 'suc' => $suc, 'pago' => $pago];
     }
 
     public function ficha(int $id): ?array

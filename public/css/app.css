@@ -227,6 +227,13 @@ body.cajero #toast.on{transform:translateX(-50%);opacity:1}body.cajero #toast.ba
 .vt-bar i{display:block;height:100%;background:var(--y);border-radius:99px}
 .vt-bk.s .vt-bar i{background:var(--pu2)}
 .vt-bk.p .vt-bar i{background:var(--te2)}
+.vt-break{align-items:start}
+.vt-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+.vt-tab{border:1.5px solid rgba(14,138,150,.35);background:#fff;color:var(--k);border-radius:999px;padding:7px 14px;font-size:13px;font-family:inherit;cursor:pointer;transition:.12s}
+.vt-tab:hover{border-color:var(--te2)}
+.vt-tab.on{background:var(--te2);border-color:var(--te2);color:#fff;font-weight:700}
+.vt-tab:focus-visible{outline:2px solid var(--b);outline-offset:2px}
+.vt-panel[hidden]{display:none}
 .vt-filters{background:#fff;border:1px solid var(--g2);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:16px;margin-bottom:14px}
 .vt-grp{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .vt-lb{width:110px;flex-shrink:0;font-size:12px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.5px}
@@ -370,11 +377,6 @@ main.micaja .btn.y{box-shadow:0 6px 16px rgba(255,196,0,.35)}
 .stk th{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:#6B7694;background:#F4F7FD;border-bottom:1px solid #E4EAF5}
 .stk tr:hover td{background:#F4F7FD}
 
-.stk-aviso{margin-top:20px;padding:20px;background:#FFFBEA;border:1px solid #FFE58F;border-radius:18px}
-.stk-aviso h3{margin:0 0 4px;font-size:16px;color:#0F1B3D}
-.stk-aviso small{color:#6B7694}
-.stk-aviso .fila{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
-.stk-aviso select{flex:1;min-width:220px;border-radius:12px;padding:11px 14px;border:1px solid #E4EAF5;background:#fff}
 
 @media (max-width:1000px){.stk-kpis{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:560px){.stk-kpis{grid-template-columns:1fr}}
@@ -402,8 +404,6 @@ main.micaja .btn.y{box-shadow:0 6px 16px rgba(255,196,0,.35)}
 .reg-tipo input:checked + span{border-color:var(--c);background:var(--bg)}
 .t-entrada{--c:#16a34a;--bg:#E6F8EE}
 .t-salida{--c:#FF9F1C;--bg:#FFF6D6}
-.t-ajuste{--c:#2F6BFF;--bg:#E8F0FF}
-.t-merma{--c:#ef4444;--bg:#FFE9E9}
 
 .reg-cant{display:flex;align-items:center;gap:10px}
 .reg-cant em{font-style:normal;color:#6B7694;font-weight:600;white-space:nowrap}
@@ -453,6 +453,10 @@ main.micaja .btn.y{box-shadow:0 6px 16px rgba(255,196,0,.35)}
 .prd-item{background:#fff;border:1px solid var(--g2);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;transition:.15s}
 .prd-item:hover{border-color:var(--y);box-shadow:0 6px 18px rgba(15,17,21,.07);transform:translateY(-2px)}
 .prd-item.off{opacity:.65}
+.prd-stock{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:#F7F9FD;border:1px solid #E8EDF6;border-radius:12px}
+.prd-stock>span:first-child{display:flex;flex-direction:column;gap:3px;min-width:0}
+.prd-stock small{font-size:11px;color:#6B7694}
+.prd-stock b{font-size:14px;color:#0F1B3D}
 .prd-top{display:flex;gap:12px;align-items:center}
 .prd-ico{width:46px;height:46px;border-radius:12px;background:var(--y2);display:grid;place-items:center;font-size:22px;flex-shrink:0}
 .prd-top h4{font-size:15px;line-height:1.25}
