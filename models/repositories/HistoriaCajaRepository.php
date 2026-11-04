@@ -143,6 +143,11 @@ class HistoriaCajaRepository extends Repository
             if (!$s->fetch()) {
                 throw new RuntimeException('el responsable no existe o está inactivo.');
             }
+                        $s = $db->prepare("SELECT 1 FROM historia_caja WHERE empleado_id = ? AND estado = 'ABIERTA'");
+            $s->execute([$empleadoId]);
+            if ($s->fetch()) {
+                throw new RuntimeException('ya tienes un turno abierto; ciérralo antes de abrir otra caja.');
+            }
             $s = $db->prepare("SELECT 1 FROM historia_caja WHERE caja_id = ? AND estado = 'ABIERTA'");
             $s->execute([$cajaId]);
             if ($s->fetch()) {

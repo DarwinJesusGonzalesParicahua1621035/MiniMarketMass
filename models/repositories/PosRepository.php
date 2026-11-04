@@ -152,7 +152,7 @@ class PosRepository extends Repository
                 }
             }
             if ($recibidoC < $totalC) {
-                throw new InvalidArgumentException('El monto pagado no cubre el total.');
+                throw new InvalidArgumentException("El monto pagado no cubre el total. (recibido=$recibidoC, total=$totalC)");
             }
             $vueltoC = $recibidoC - $totalC;
             if ($vueltoC > $efectivoC) {

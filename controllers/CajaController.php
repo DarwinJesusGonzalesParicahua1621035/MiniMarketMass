@@ -2,6 +2,21 @@
 class CajaController extends Controller
 {
     protected array $roles = ['ADMINISTRADOR', 'CAJERO'];
+    
+    // El cajero nunca debe ver el panel de administración: vuelve siempre a su pantalla.
+    private function volver(array $q = []): void
+    {
+        $esCajero = (Auth::user()['rol'] ?? '') === 'CAJERO';
+        $this->redirect($esCajero ? 'cajero/caja' : 'caja/index', $esCajero ? [] : $q);
+    }
+
+    // Pantallas y acciones que son solo del administrador.
+    private function soloAdmin(): void
+    {
+        if ((Auth::user()['rol'] ?? '') !== 'ADMINISTRADOR') {
+            $this->redirect('cajero/caja');
+        }
+    }
 
     private function filtros(): array
     {
@@ -35,6 +50,7 @@ class CajaController extends Controller
 
     public function index(): void
     {
+        $this->soloAdmin();
         $c = new CajaRepository();
         $h = new HistoriaCajaRepository();
         $f = $this->filtros();
@@ -69,6 +85,7 @@ class CajaController extends Controller
 
     public function exportar(): void
     {
+        $this->soloAdmin();
         $f = $this->filtros();
         $filas = (new HistoriaCajaRepository())->listado($f, 5000, 0);
         header('Content-Type: text/csv; charset=utf-8');
@@ -88,11 +105,13 @@ class CajaController extends Controller
 
     public function historial(): void
     {
+        $this->soloAdmin();
         $this->redirect('caja/index');
     }
 
     public function nueva(): void
     {
+        $this->soloAdmin();
         if (Auth::user()['rol'] !== 'ADMINISTRADOR') {
             $this->flash('Solo un administrador puede crear cajas', 'err');
             $this->redirect('caja/index');
@@ -108,24 +127,25 @@ class CajaController extends Controller
         $this->redirect('caja/index');
     }
 
-    public function abrir(): void
+            public function abrir(): void
     {
-        $u = Auth::user();
-        if ($u['rol'] === 'ADMINISTRADOR') {
-            $this->flash('El administrador no abre cajas: solo puede crearlas, cerrarlas y ver sus ventas', 'err');
-            $this->redirect('caja/index');
-        }
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $id = (int)($_GET['id'] ?? 0);
-            $this->redirect('caja/index', $id ? ['abrir' => $id] : []);
+            $this->volver($id ? ['abrir' => $id] : []);
         }
+        $u = Auth::user();
+        if ($u['rol'] === 'CAJERO' && !(new AsistenciaRepository())->deHoy((int)$u['id'])) {
+            $this->flash('No se pudo abrir: primero registra tu asistencia.', 'err');
+            $this->volver();
+        }
+        $emp = $u['rol'] === 'ADMINISTRADOR' ? (int)($_POST['empleado_id'] ?? $u['id']) : (int)$u['id'];
         try {
-            (new HistoriaCajaRepository())->abrir((int)($_POST['caja_id'] ?? 0), (int)$u['id'], (string)($_POST['monto_inicial'] ?? ''));
+            (new HistoriaCajaRepository())->abrir((int)($_POST['caja_id'] ?? 0), $emp, (string)($_POST['monto_inicial'] ?? ''));
             $this->flash('Caja abierta');
         } catch (InvalidArgumentException | RuntimeException | PDOException $e) {
             $this->flash('No se pudo abrir: ' . $this->mensaje($e), 'err');
         }
-        $this->redirect('caja/index');
+        $this->volver();
     }
 
     public function cerrar(): void
@@ -138,6 +158,6 @@ class CajaController extends Controller
                 $this->flash('No se pudo cerrar: ' . $this->mensaje($e), 'err');
             }
         }
-        $this->redirect('caja/index');
+        $this->volver();
     }
 }
