@@ -26,14 +26,14 @@ class PosRepository extends Repository
         return (string)($s->fetchColumn() ?: '');
     }
 
-    // Todos los productos con su estado y su stock en la sucursal (0 si no tienen registro).
+    // Solo los productos asignados a la sucursal, con su stock propio.
     public function productos(int $sucursalId): array
     {
         $s = $this->db()->prepare('SELECT p.id, p.codigo_barras, p.nombre, c.nombre AS categoria,
-                p.unidad, p.precio, p.activo, COALESCE(st.cantidad, 0) AS cantidad
+                p.unidad, p.precio, p.activo, st.cantidad AS cantidad
             FROM producto p
             JOIN categoria c ON c.id = p.categoria_id
-            LEFT JOIN stock st ON st.producto_id = p.id AND st.sucursal_id = ?
+            JOIN stock st ON st.producto_id = p.id AND st.sucursal_id = ?
             ORDER BY p.nombre');
         $s->execute([$sucursalId]);
         return array_map(fn($p) => [
@@ -209,7 +209,7 @@ class PosRepository extends Repository
                 $det->execute([$ventaId, $l['id'], $qty, $this->dec($l['puC']), $this->dec($l['tlC'])]);
                 $stock->registrar([
                     'sucursal_id' => $sid, 'producto_id' => $l['id'], 'empleado_id' => $empleadoId,
-                    'venta_id' => $ventaId, 'tipo' => 'SALIDA', 'cantidad' => $qty, 'motivo' => 'Venta ' . $comprobante,
+                    'venta_id' => $ventaId, 'tipo' => 'VENTA', 'cantidad' => $qty, 'motivo' => 'Venta ' . $comprobante,
                 ]);
             }
 

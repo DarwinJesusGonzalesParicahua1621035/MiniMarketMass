@@ -14,3 +14,9 @@ function celda($v, $t = 'texto') {
         default:         return e($v);
     }
 }
+
+// Cantidad sin ceros sobrantes: 120.000 -> 120, 0.500 -> 0.5
+function num($v) {
+    $s = rtrim(rtrim(number_format((float)$v, 3, '.', ''), '0'), '.');
+    return $s === '' || $s === '-0' ? '0' : $s;
+}

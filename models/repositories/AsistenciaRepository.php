@@ -2,7 +2,9 @@
 class AsistenciaRepository extends Repository
 {
     protected string $tabla = 'asistencia';
-    protected string $listaSql = "SELECT a.id, e.nombre AS empleado, a.entrada, COALESCE(a.salida, '—') AS salida, a.estado
+    // Cambios: ahora trae a.empleado_id (la vista lo necesita para editar) y deja a.salida tal cual
+    // (NULL si todavía no marcó salida). Antes se devolvía el texto '—', y la vista lo confundía con una hora.
+    protected string $listaSql = "SELECT a.id, a.empleado_id, e.nombre AS empleado, a.entrada, a.salida, a.estado
         FROM asistencia a JOIN empleado e ON e.id = a.empleado_id ORDER BY a.entrada DESC, a.id DESC";
 
     // Asistencia del empleado en el día de hoy (null si todavía no la registró).

@@ -36,6 +36,8 @@ class ProductosController extends CrudController
             'filas'        => $r->resumen($categoria, $proveedor),
             'categorias'   => $r->pares('SELECT id, nombre FROM categoria ORDER BY nombre'),
             'proveedores'  => $r->pares('SELECT id, razon_social AS nombre FROM proveedor ORDER BY razon_social'),
+            'sucursales'   => $r->pares('SELECT id, nombre FROM sucursal ORDER BY nombre'),
+            'asignaciones' => $r->asignaciones(),
             'categoriaSel' => $categoria,
             'proveedorSel' => $proveedor,
         ]);
@@ -80,6 +82,41 @@ class ProductosController extends CrudController
             throw new RuntimeException('el estado no es válido.');
         }
         return $d;
+    }
+
+    // Guarda el producto y las sucursales donde se maneja (cada una con su propio stock).
+    public function guardar(): void
+    {
+        $c = $this->config();
+        $r = $c['repo'];
+        $id = (int)($_POST['id'] ?? 0);
+        $d = [];
+        foreach ($c['campos'] as $n => $f) {
+            $d[$n] = trim($_POST[$n] ?? '');
+        }
+        try {
+            $d = $this->antes($d, $id);
+            $marcadas = [];
+            foreach ((array)($_POST['suc'] ?? []) as $sid => $x) {
+                $ini = trim((string)($x['stock'] ?? ''));
+                if ($ini !== '' && !preg_match('/^\d{1,7}$/', $ini)) {
+                    throw new RuntimeException('el stock inicial debe ser un número entero.');
+                }
+                if (!empty($x['on'])) {
+                    $marcadas[(int)$sid] = (int)$ini;
+                }
+            }
+            if ($id) {
+                $r->actualizar($id, $d);
+            } else {
+                $id = $r->insertar($d);
+            }
+            $r->asignarSucursales($id, $marcadas, (int)Auth::user()['id']);
+            $this->flash('Guardado correctamente');
+        } catch (PDOException | RuntimeException | InvalidArgumentException $e) {
+            $this->flash('No se pudo guardar: ' . $this->mensaje($e), 'err');
+        }
+        $this->redirect('productos/index');
     }
 
     // Los productos no se borran (tienen historial y ventas): se desactivan con Activo = No.

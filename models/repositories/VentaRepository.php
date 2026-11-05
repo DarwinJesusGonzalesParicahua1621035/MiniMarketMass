@@ -189,7 +189,7 @@ class VentaRepository extends Repository
             }
             $db->prepare("UPDATE venta SET estado = 'ANULADA', motivo_anulacion = ? WHERE id = ?")->execute([$motivo, $id]);
 
-            $m = $db->prepare("SELECT producto_id, cantidad FROM movimiento_stock WHERE venta_id = ? AND tipo = 'SALIDA'");
+            $m = $db->prepare("SELECT producto_id, cantidad FROM movimiento_stock WHERE venta_id = ? AND tipo = 'VENTA'");
             $m->execute([$id]);
             $stock = new MovimientoStock($db);
             foreach ($m->fetchAll() as $f) {

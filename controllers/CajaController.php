@@ -104,12 +104,6 @@ class CajaController extends Controller
         exit;
     }
 
-    public function historial(): void
-    {
-        $this->soloAdmin();
-        $this->redirect('caja/index');
-    }
-
     public function nueva(): void
     {
         $this->soloAdmin();
