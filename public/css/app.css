@@ -718,3 +718,11 @@ main.micaja .btn.y{box-shadow:0 6px 16px rgba(255,196,0,.35)}
 
 @media (max-width:1100px){.sk-kpis{grid-template-columns:repeat(3,1fr)}}
 @media (max-width:640px){.sk-kpis,.sk-kpis3{grid-template-columns:1fr 1fr}}
+
+/* Cerrar sesión como botón con aspecto de enlace */
+.salir-form { display: inline; margin: 0; }
+.salir-form button {
+  background: none; border: 0; padding: 0;
+  font: inherit; color: inherit;
+  text-decoration: underline; cursor: pointer;
+}
