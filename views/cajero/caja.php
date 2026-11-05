@@ -71,7 +71,7 @@ $sucursalChip = preg_replace('/^Mass\s+/i', 'Sucursal ', (string)$sucursal);
     </div>
     <form class="card hero" method="post" action="<?= Controller::url('cajero/asistencia') ?>">
       <div class="big">🕘</div>
-      <div><h2>Registra tu asistencia</h2><p>Marca tu entrada para poder abrir caja.</p></div>
+      <div><h2>Registra tu asistencia</h2><p>Marca tu entrada para poder abrir caja. Hasta las 8:30 se registra como temprano y después de las 8:30 como tarde.</p></div>
       <button class="btn y" type="submit">Registrar asistencia</button>
       <input type="hidden" name="csrf" value="<?= e(Controller::csrf()) ?>">
     </form>
@@ -87,7 +87,8 @@ $sucursalChip = preg_replace('/^Mass\s+/i', 'Sucursal ', (string)$sucursal);
       <?php endforeach; ?>
     </div>
 
-    <span class="chip" style="display:inline-block;margin-bottom:14px;background:#e3f6ec;color:var(--ok);border:0">✓ Entrada registrada a las <?= e($hora) ?> · Presente</span>
+    <?php $esAs = $asistencia['estado']; $colAs = ['PRESENTE' => ['#e3f6ec', 'var(--ok)'], 'TARDANZA' => ['#fff3c4', '#8a6700'], 'FALTA' => ['#fbe5e5', 'var(--bad)']][$esAs] ?? ['#e3f6ec', 'var(--ok)']; ?>
+    <span class="chip" style="display:inline-block;margin-bottom:14px;background:<?= $colAs[0] ?>;color:<?= $colAs[1] ?>;border:0">✓ Entrada registrada a las <?= e($hora) ?> · <?= e(AsistenciaRepository::etiqueta($esAs)) ?></span>
 
     <div class="split">
       <form class="card" id="formAbrir" method="post" action="<?= Controller::url('caja/abrir') ?>">

@@ -1,0 +1,30 @@
+/* Dashboard · bloque "Sucursales" (estado de cajas + asistencia del personal) */
+.sb-card .sb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:16px}
+.sb{border-radius:16px;padding:16px;border:1.5px solid;transition:.15s}
+.sb:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(30,60,140,.1)}
+.sb.on{background:#E6F7EE;border-color:#B7E4CA}
+.sb.off{background:#FDEBEB;border-color:#F3C2C2}
+.sb-top{display:flex;align-items:flex-start;gap:10px}
+.sb-nom{min-width:0;flex:1}
+.sb-nom b{display:block;font-size:15px;color:#0F1B3D}
+.sb-nom small{display:block;font-size:12px;color:#5B616C;margin-top:2px}
+.sb-est{flex:none;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:99px;color:#fff}
+.sb.on .sb-est{background:var(--ok)}
+.sb.off .sb-est{background:var(--bad)}
+.sb-caja{margin:10px 0 12px;font-size:13px;font-weight:600}
+.sb.on .sb-caja{color:#0b6b3a}
+.sb.off .sb-caja{color:#b32626}
+.sb-emps{display:flex;flex-wrap:wrap;gap:6px}
+.sb-vacio{color:var(--g4);font-size:12px}
+
+/* Chips de empleados: el fondo y el punto indican la asistencia de hoy */
+.sb-chip{display:inline-flex;align-items:center;gap:7px;border-radius:99px;padding:5px 12px 5px 10px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.sb-chip i{width:9px;height:9px;border-radius:50%;flex:none}
+.sb-chip.temprano{background:#CDEFDB;color:#0b6b3a}.sb-chip.temprano i{background:#17a35a}
+.sb-chip.tarde{background:#CDEFDB;color:#0b6b3a}.sb-chip.tarde i{background:#FFC400}
+.sb-chip.pendiente{background:#E3E5E9;color:#5B616C}.sb-chip.pendiente i{background:#d93a3a}
+.sb-chip.falta{background:#F8CFCF;color:#b32626}.sb-chip.falta i{background:#d93a3a}
+
+.sb-leyenda{list-style:none;display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:16px;padding-top:12px;border-top:1px solid var(--g2);font-size:12px;color:var(--g4)}
+.sb-leyenda li{display:flex;align-items:center;gap:7px}
+.sb-leyenda .sb-chip{padding:3px 10px 3px 8px;font-size:11.5px}

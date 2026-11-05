@@ -58,8 +58,10 @@ class CajeroController extends Controller
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
-                (new AsistenciaRepository())->registrarEntrada((int)Auth::user()['id']);
-                $this->flash('Asistencia registrada');
+                $repo = new AsistenciaRepository();
+                $repo->registrarEntrada((int)Auth::user()['id']);
+                $a = $repo->deHoy((int)Auth::user()['id']);
+                $this->flash('Asistencia registrada · ' . AsistenciaRepository::etiqueta($a['estado'] ?? 'PRESENTE'));
             } catch (InvalidArgumentException | RuntimeException | PDOException $e) {
                 $this->flash('No se pudo registrar: ' . $this->mensaje($e), 'err');
             }
