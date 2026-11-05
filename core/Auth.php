@@ -7,18 +7,72 @@ class Auth
 
     public static function login(string $usuario, string $clave, bool $recordar = false): bool
     {
-        $s = Database::pdo()->prepare('SELECT id, nombre, clave, rol FROM empleado WHERE usuario = ? AND activo = 1');
+        $s = Database::pdo()->prepare('SELECT id, nombre, clave, rol, totp_activo FROM empleado WHERE usuario = ? AND activo = 1');
         $s->execute([$usuario]);
         $u = $s->fetch();
         if (!$u || !in_array($u['rol'], self::ROLES, true) || !password_verify($clave, $u['clave'])) {
             return false;
         }
+        $datos = ['id' => (int)$u['id'], 'nombre' => $u['nombre'], 'rol' => $u['rol']];
+        if (!empty($u['totp_activo'])) {
+            session_regenerate_id(true);
+            $_SESSION['2fa'] = $datos + ['recordar' => $recordar, 't' => time(), 'n' => 0];
+            return true;
+        }
+        self::abrir($datos, $recordar);
+        return true;
+    }
+
+    /* ---------- Segundo paso (código de 6 dígitos) ---------- */
+
+    public static function requiere2fa(): bool
+    {
+        $p = $_SESSION['2fa'] ?? null;
+        if (!$p) {
+            return false;
+        }
+        if (time() - $p['t'] > 300) {
+            unset($_SESSION['2fa']);
+            return false;
+        }
+        return true;
+    }
+
+    public static function verificar2fa(string $codigo): bool
+    {
+        if (!self::requiere2fa()) {
+            return false;
+        }
+        $p = $_SESSION['2fa'];
+        if ($p['n'] >= 5) {
+            unset($_SESSION['2fa']);
+            return false;
+        }
+        $_SESSION['2fa']['n']++;
+        $pdo = Database::pdo();
+        $s = $pdo->prepare('SELECT totp_secreto, totp_ultimo FROM empleado WHERE id = ? AND activo = 1');
+        $s->execute([$p['id']]);
+        $r = $s->fetch();
+        if (!$r || !$r['totp_secreto']) {
+            return false;
+        }
+        $paso = Totp::verificar($r['totp_secreto'], $codigo);
+        if ($paso === null || $paso <= (int)$r['totp_ultimo']) {
+            return false;
+        }
+        $pdo->prepare('UPDATE empleado SET totp_ultimo = ? WHERE id = ?')->execute([$paso, $p['id']]);
+        unset($_SESSION['2fa']);
+        self::abrir(['id' => $p['id'], 'nombre' => $p['nombre'], 'rol' => $p['rol']], (bool)$p['recordar']);
+        return true;
+    }
+
+    private static function abrir(array $u, bool $recordar): void
+    {
         session_regenerate_id(true);
-        $_SESSION['user'] = ['id' => (int)$u['id'], 'nombre' => $u['nombre'], 'rol' => $u['rol']];
+        $_SESSION['user'] = $u;
         if ($recordar) {
             self::recordar((int)$u['id']);
         }
-        return true;
     }
 
     public static function inicio(string $rol): string
@@ -37,6 +91,8 @@ class Auth
         $_SESSION = [];
         session_destroy();
     }
+
+    /* ---------- Mantener sesión ---------- */
 
     private static function cookie(string $valor, int $expira): void
     {

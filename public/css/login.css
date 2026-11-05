@@ -86,3 +86,10 @@ body{font:15px/1.5 'DM Sans',system-ui,sans-serif;color:var(--tx);background:var
   .card .mlogo{display:flex;margin-bottom:22px}.card .mlogo span{color:var(--tx)}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Código de 6 dígitos */
+.otp{width:100%;height:64px;border:1.5px solid var(--line);border-radius:14px;background:var(--field);color:var(--tx);font:600 30px 'IBM Plex Mono',monospace;letter-spacing:.45em;text-align:center;padding-left:.45em;outline:0;margin-bottom:18px;transition:border-color .2s,box-shadow .2s}
+.otp::placeholder{color:var(--line)}
+.otp:focus{border-color:var(--b);background:var(--card);box-shadow:0 0 0 4px rgba(47,107,255,.16)}
+.help a{color:var(--b);font-weight:600;text-decoration:none}
+.help a:hover{text-decoration:underline}

@@ -9,6 +9,7 @@ $iniciales = mb_strtoupper(implode('', array_map(
 $uid   = (int)$user['id'];
 $turno = $turno ?? (new PosRepository())->turno($uid);
 $fase  = $turno ? 2 : ((new AsistenciaRepository())->deHoy($uid) ? 1 : 0);
+$segActivo = !empty($user['totp_activo']);
 
 $urlCaja = Controller::url('cajero/caja');
 $items = [
@@ -52,10 +53,19 @@ $items = [
       <button type="button" id="incAbrir"><span>⚠️</span>Incidencias</button>
 
     <?php endif; ?>
+
+    <h6>Cuenta</h6>
+    <a href="<?= Controller::url('seguridad/index') ?>" class="<?= $activo === 'seguridad' ? 'on' : '' ?>">
+      <span>🛡️</span>Seguridad
+      <em class="ins <?= $segActivo ? 'ok' : '' ?>"><?= $segActivo ? 'Activado' : 'Recomendado' ?></em>
+    </a>
   </nav>
   <div class="me"><b><?= e($iniciales) ?></b>
     <div><?= e($user['nombre']) ?><small>Cajero<?= $sucursal ? ' · ' . e($sucursal) : '' ?></small>
-      <a href="<?= Controller::url('auth/salir') ?>">Cerrar sesión</a></div></div>
+      <form method="post" action="<?= Controller::url('auth/salir') ?>">
+        <input type="hidden" name="csrf" value="<?= e(Controller::csrf()) ?>">
+        <button type="submit">Cerrar sesión</button>
+      </form></div></div>
 </aside>
 
 <?php if ($fase === 2): ?>
