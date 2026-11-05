@@ -42,20 +42,6 @@ class StockRepository extends Repository
         return $s->fetchAll();
     }
 
-    // Combinaciones sucursal-producto que ya tienen stock (valor "sucursal-producto").
-    public function combinaciones(): array
-    {
-        $o = [];
-        $q = "SELECT st.sucursal_id, st.producto_id,
-              CONCAT(s.nombre, ' · ', p.nombre, ' (', st.cantidad, ' ', p.unidad, ')') AS texto
-              FROM stock st JOIN sucursal s ON s.id = st.sucursal_id
-              JOIN producto p ON p.id = st.producto_id ORDER BY s.nombre, p.nombre";
-        foreach ($this->db()->query($q) as $r) {
-            $o[$r['sucursal_id'] . '-' . $r['producto_id']] = $r['texto'];
-        }
-        return $o;
-    }
-
     // Productos que se manejan en cada sucursal (solo ellos admiten movimientos), con su categoría.
     public function opcionesStock(): array
     {

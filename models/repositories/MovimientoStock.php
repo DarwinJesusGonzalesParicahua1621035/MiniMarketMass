@@ -110,58 +110,6 @@ class MovimientoStock
         }
     }
 
-    /**
-     * Lista movimientos. Filtros opcionales:
-     * sucursal_id, producto_id, tipo, desde, hasta (formato AAAA-MM-DD).
-     */
-    public function listar(array $filtros = []): array
-    {
-        $sql = 'SELECT id, sucursal_id, producto_id, empleado_id, venta_id,
-                       tipo, cantidad, motivo, fecha
-                FROM movimiento_stock
-                WHERE 1 = 1';
-        $params = [];
-
-        if (!empty($filtros['sucursal_id'])) {
-            $sql .= ' AND sucursal_id = :sucursal_id';
-            $params['sucursal_id'] = (int)$filtros['sucursal_id'];
-        }
-        if (!empty($filtros['producto_id'])) {
-            $sql .= ' AND producto_id = :producto_id';
-            $params['producto_id'] = (int)$filtros['producto_id'];
-        }
-        if (!empty($filtros['tipo'])) {
-            $tipo = strtoupper(trim((string)$filtros['tipo']));
-            if (!in_array($tipo, self::TIPOS, true)) {
-                throw new InvalidArgumentException('Tipo de filtro inválido.');
-            }
-            $sql .= ' AND tipo = :tipo';
-            $params['tipo'] = $tipo;
-        }
-        if (!empty($filtros['desde'])) {
-            $desde = (string)$filtros['desde'];
-            if (strlen($desde) === 10) {
-                $desde .= ' 00:00:00';
-            }
-            $sql .= ' AND fecha >= :desde';
-            $params['desde'] = $desde;
-        }
-        if (!empty($filtros['hasta'])) {
-            $hasta = (string)$filtros['hasta'];
-            if (strlen($hasta) === 10) {
-                $hasta .= ' 23:59:59';
-            }
-            $sql .= ' AND fecha <= :hasta';
-            $params['hasta'] = $hasta;
-        }
-
-        $sql .= ' ORDER BY fecha DESC, id DESC';
-
-        $st = $this->db->prepare($sql);
-        $st->execute($params);
-        return $st->fetchAll(PDO::FETCH_ASSOC);
-    }
-
     // Lee un número entero mayor que 0 desde el arreglo de datos.
     private function entero(array $d, string $clave): int
     {
