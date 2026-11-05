@@ -3,10 +3,8 @@ $old = $old ?? [];
 [$oldS, $oldP] = array_pad(explode('-', (string)($old['stock'] ?? ''), 2), 2, '');
 $tipoSel = $old['tipo'] ?? 'ENTRADA';
 $tipos = [
-    'ENTRADA' => ['t-entrada', 'Entrada', 'Suma · llegada de mercadería',      '+'],
-    'SALIDA'  => ['t-salida',  'Salida',  'Resta · retiro de stock',           '-'],
-    'AJUSTE'  => ['t-ajuste',  'Ajuste',  'Suma · corrección de inventario',   '+'],
-    'MERMA'   => ['t-merma',   'Merma',   'Resta · producto dañado o vencido', '-'],
+    'ENTRADA' => ['t-entrada', 'Entrada', 'Suma · llegada de mercadería',         '+'],
+    'SALIDA'  => ['t-salida',  'Salida',  'Resta · merma, rotura o retiro',       '-'],
 ];
 $sucs = [];
 $data = [];
@@ -28,7 +26,7 @@ $signos = array_map(fn($t) => $t[3] === '+' ? 1 : -1, $tipos);
   <div class="stk-head">
     <div>
        <h2>Nuevo movimiento de inventario</h2>
-      <p>Completa los 5 pasos. El stock se actualiza y queda constancia en el historial.</p>
+      <p>Selecciona la sucursal y el producto. El stock se actualiza automáticamente y queda registrado en el historial.</p>
     </div>
   </div>
 
@@ -56,7 +54,7 @@ $signos = array_map(fn($t) => $t[3] === '+' ? 1 : -1, $tipos);
         <div class="reg-n">2</div>
         <div class="reg-c">
           <label class="t" for="regProd">Producto</label>
-          <small class="h">Solo salen los productos de la sucursal elegida.</small>
+          <small class="h">Solo salen los productos asignados a esa sucursal (se asignan en Productos → Editar). Las ventas se descuentan solas desde caja.</small>
           <select id="regProd" required disabled>
             <option value="">Primero elige la sucursal</option>
           </select>
@@ -67,7 +65,7 @@ $signos = array_map(fn($t) => $t[3] === '+' ? 1 : -1, $tipos);
         <div class="reg-n">3</div>
         <div class="reg-c">
           <span class="t">Tipo de movimiento</span>
-          <small class="h">¿Qué pasó con el producto?</small>
+          <small class="h">¿El producto ingresa o sale del inventario?</small>
           <div class="reg-tipos">
             <?php foreach ($tipos as $clave => [$cls, $tit, $sub]): ?>
               <label class="reg-tipo <?= $cls ?>">
@@ -83,10 +81,10 @@ $signos = array_map(fn($t) => $t[3] === '+' ? 1 : -1, $tipos);
         <div class="reg-n">4</div>
         <div class="reg-c">
           <label class="t" for="regCant">Cantidad</label>
-          <small class="h">Cuántas unidades entran o salen.</small>
+          <small class="h">Número entero de unidades que ingresan o salen.</small>
           <div class="reg-cant">
-                      <input type="text" id="regCant" name="cantidad" inputmode="numeric" pattern="[1-9][0-9]{0,6}"
-                   maxlength="7" autocomplete="off" title="Solo números enteros, mayores que 0"
+                      <input type="text" id="regCant" name="cantidad" inputmode="numeric" pattern="[0-9]{1,7}"
+                   maxlength="7" autocomplete="off" title="Número entero mayor que 0"
                    value="<?= e($old['cantidad'] ?? '') ?>" placeholder="0" required>
             <em id="regUni"></em>
           </div>
@@ -187,7 +185,7 @@ $signos = array_map(fn($t) => $t[3] === '+' ? 1 : -1, $tipos);
   suc.addEventListener('change', function () { llenar(); actualizar(); });
   prod.addEventListener('change', actualizar);
     cant.addEventListener('input', function () {
-    cant.value = cant.value.replace(/\D/g, '').replace(/^0+/, '');
+    cant.value = cant.value.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, '');
     actualizar();
   });
   document.querySelectorAll('input[name=tipo]').forEach(function (i) { i.addEventListener('change', actualizar); });

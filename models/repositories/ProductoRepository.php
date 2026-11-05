@@ -22,6 +22,72 @@ class ProductoRepository extends Repository
         return $s->fetchAll();
     }
 
+    // Sucursales donde se maneja cada producto: [producto_id => [sucursal_id => cantidad]].
+    public function asignaciones(): array
+    {
+        $o = [];
+        foreach ($this->db()->query('SELECT producto_id, sucursal_id, cantidad FROM stock') as $r) {
+            $o[(int)$r['producto_id']][(int)$r['sucursal_id']] = (float)$r['cantidad'];
+        }
+        return $o;
+    }
+
+    /**
+     * Deja el producto en las sucursales marcadas. $marcadas: [sucursal_id => stock inicial (entero)].
+     * - Sucursal nueva: crea su fila de stock y, si hay stock inicial, lo registra como ENTRADA.
+     * - Sucursal desmarcada: se quita solo si nunca tuvo movimientos.
+     */
+    public function asignarSucursales(int $productoId, array $marcadas, int $empleadoId): void
+    {
+        $db = $this->db();
+        $db->beginTransaction();
+        try {
+            $actual = [];
+            $q = $db->prepare('SELECT sucursal_id FROM stock WHERE producto_id = ? FOR UPDATE');
+            $q->execute([$productoId]);
+            foreach ($q->fetchAll(PDO::FETCH_COLUMN) as $sid) {
+                $actual[(int)$sid] = true;
+            }
+
+            $mov = new MovimientoStock($db);
+            $ins = $db->prepare('INSERT INTO stock (sucursal_id, producto_id, cantidad) VALUES (?, ?, 0)');
+            foreach ($marcadas as $sid => $inicial) {
+                if (isset($actual[$sid])) {
+                    continue;
+                }
+                $ins->execute([$sid, $productoId]);
+                if ($inicial > 0) {
+                    $mov->registrar([
+                        'sucursal_id' => $sid, 'producto_id' => $productoId, 'empleado_id' => $empleadoId,
+                        'tipo' => 'ENTRADA', 'cantidad' => (string)$inicial, 'motivo' => 'Stock inicial',
+                    ]);
+                }
+            }
+
+            $hist = $db->prepare('SELECT COUNT(*) FROM movimiento_stock WHERE sucursal_id = ? AND producto_id = ?');
+            $del = $db->prepare('DELETE FROM stock WHERE sucursal_id = ? AND producto_id = ?');
+            $nombre = $db->prepare('SELECT nombre FROM sucursal WHERE id = ?');
+            foreach (array_keys($actual) as $sid) {
+                if (isset($marcadas[$sid])) {
+                    continue;
+                }
+                $hist->execute([$sid, $productoId]);
+                if ((int)$hist->fetchColumn() > 0) {
+                    $nombre->execute([$sid]);
+                    throw new RuntimeException('no se puede quitar de ' . $nombre->fetchColumn()
+                        . ' porque ya tiene movimientos en el historial.');
+                }
+                $del->execute([$sid, $productoId]);
+            }
+            $db->commit();
+        } catch (Throwable $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            throw $e;
+        }
+    }
+
     // Un producto con el nombre de su categoría.
     public function detalle(int $id): ?array
     {

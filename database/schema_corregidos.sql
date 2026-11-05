@@ -136,7 +136,7 @@ CREATE TABLE historial_precio (
     CONSTRAINT fk_historial_precio_producto FOREIGN KEY (producto_id) REFERENCES producto (id)
 ) ENGINE=InnoDB;
 
--- Cantidad disponible de cada producto en cada sucursal.
+-- Cantidad disponible de cada producto en cada sucursal. Una fila = el producto se maneja en esa sucursal, con stock propio.
 CREATE TABLE stock (
     sucursal_id INT UNSIGNED   NOT NULL,
     producto_id INT UNSIGNED   NOT NULL,

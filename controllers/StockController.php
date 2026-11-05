@@ -7,12 +7,15 @@ class StockController extends Controller
     {
         $r = new StockRepository();
         $sucursal = (int)($_GET['sucursal'] ?? 0) ?: null;
+        $sucursales = $r->pares('SELECT id, nombre FROM sucursal ORDER BY nombre');
+        if ($sucursal && !isset($sucursales[$sucursal])) {
+            $sucursal = null;
+        }
         $this->render('stock/index', [
             'titulo'      => 'Stock',
-            'filas'       => $r->resumen($sucursal),
-            'sucursales'  => $r->pares('SELECT id, nombre FROM sucursal ORDER BY nombre'),
+            'inventario'  => $r->inventario(),
+            'sucursales'  => $sucursales,
             'sucursalSel' => $sucursal,
-            'faltantes'   => $r->faltantes(),
         ]);
     }
 
@@ -21,7 +24,7 @@ class StockController extends Controller
         $r = new StockRepository();
         $sucursal = (int)($_GET['sucursal'] ?? 0) ?: null;
         $tipo = strtoupper(trim($_GET['tipo'] ?? ''));
-        if (!in_array($tipo, ['ENTRADA', 'SALIDA', 'AJUSTE', 'MERMA'], true)) {
+        if (!in_array($tipo, ['ENTRADA', 'SALIDA', 'VENTA'], true)) {
             $tipo = null;
         }
         $this->render('stock/movimientos', [
@@ -49,10 +52,14 @@ class StockController extends Controller
     public function guardar(): void
     {
         [$sucursalId, $productoId] = array_pad(explode('-', (string)($_POST['stock'] ?? ''), 2), 2, '0');
-                try {
+        try {
             $cant = trim((string)($_POST['cantidad'] ?? ''));
-            if (!preg_match('/^[1-9]\d{0,6}$/', $cant)) {
-                throw new InvalidArgumentException('La cantidad debe ser un número entero mayor que 0, sin decimales.');
+            if (!preg_match('/^\d{1,7}$/', $cant) || (int)$cant <= 0) {
+                throw new InvalidArgumentException('La cantidad debe ser un número entero mayor que 0.');
+            }
+            // Las ventas las registra el punto de venta; aquí solo entradas y salidas manuales.
+            if (!in_array($_POST['tipo'] ?? '', ['ENTRADA', 'SALIDA'], true)) {
+                throw new InvalidArgumentException('Elige si es una entrada o una salida.');
             }
             $u = Auth::user();
             (new MovimientoStock(Database::pdo()))->registrar([
@@ -77,15 +84,4 @@ class StockController extends Controller
         }
     }
 
-    public function inicializar(): void
-    {
-        [$sucursalId, $productoId] = array_pad(explode('-', (string)($_POST['faltante'] ?? ''), 2), 2, '0');
-        try {
-            $creado = (new Stock(Database::pdo()))->inicializar((int)$sucursalId, (int)$productoId);
-            $this->flash($creado ? 'Stock inicializado en 0' : 'Ese producto ya tenía stock');
-        } catch (PDOException $e) {
-            $this->flash('No se pudo inicializar: ' . $this->mensaje($e), 'err');
-        }
-        $this->redirect('stock/index');
-    }
 }

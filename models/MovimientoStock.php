@@ -61,7 +61,7 @@ class MovimientoStock
             $st->execute(['s' => $sucursalId, 'p' => $productoId]);
             if ($st->fetch(PDO::FETCH_ASSOC) === false) {
                 throw new RuntimeException(
-                    'Ese producto no tiene stock en esa sucursal. Inicialícelo primero.'
+                    'Ese producto no está asignado a esa sucursal. Asígnalo desde Productos.'
                 );
             }
 
