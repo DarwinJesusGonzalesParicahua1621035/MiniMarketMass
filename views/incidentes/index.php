@@ -1,179 +1,173 @@
 <?php
 // views/incidentes/index.php
 $ahora = time();
-$hoy   = date('Y-m-d');
 $sucs  = ($c['campos']['sucursal_id']['opciones'])();   // id => nombre
 
 $hace = function (string $f) use ($ahora): string {
     $m = max(0, (int)round(($ahora - strtotime($f)) / 60));
-    if ($m < 60) return $m . ' min';
-    if ($m < 1440) {
-        $h = intdiv($m, 60); $r = $m % 60;
-        return $h . ' h' . ($r ? ' ' . str_pad((string)$r, 2, '0', STR_PAD_LEFT) . ' min' : '');
-    }
+    if ($m < 1)    return 'hace un momento';
+    if ($m < 60)   return 'hace ' . $m . ' min';
+    if ($m < 1440) return 'hace ' . intdiv($m, 60) . ' h';
     $d = intdiv($m, 1440);
-    return $d . ($d === 1 ? ' día' : ' días');
+    return 'hace ' . $d . ($d === 1 ? ' día' : ' días');
 };
-$icono = fn(string $t): string => ['equipos' => '🖨️', 'seguridad' => '🛡️', 'stock' => '📦'][mb_strtolower($t)] ?? '📌';
+$iconos = ['equipos' => '🖨️', 'seguridad' => '🛡️', 'stock' => '📦', 'otro' => '📌'];
+$icono  = fn(string $t): string => $iconos[mb_strtolower($t)] ?? '📌';
 
-$nAb    = count(array_filter($filas, fn($f) => $f['estado'] === 'ABIERTO'));
-$nRes   = count($filas) - $nAb;
-$nTarde = count(array_filter($filas, fn($f) => $f['estado'] === 'ABIERTO' && ($ahora - strtotime($f['fecha'])) > 86400));
-$nHoy   = count(array_filter($filas, fn($f) => substr($f['fecha'], 0, 10) === $hoy));
-
-$tipos = []; $porSuc = [];
+// Tipos que se ofrecen al reportar: los base + cualquier otro que ya exista en los datos.
+$tipos = IncidentesController::TIPOS;
 foreach ($filas as $f) {
-    $tipos[$f['tipo']]      = ($tipos[$f['tipo']] ?? 0) + 1;
-    $porSuc[$f['sucursal']] = ($porSuc[$f['sucursal']] ?? 0) + 1;
+    if (!in_array($f['tipo'], $tipos, true)) $tipos[] = $f['tipo'];
 }
-ksort($tipos);
-?>
-<div id="incRoot">
 
-  <div class="inc-stats">
-    <div class="inc-stat warn"><i></i><div><b><?= $nAb ?></b><span>Abiertos</span></div></div>
-    <div class="inc-stat bad"><i></i><div><b><?= $nTarde ?></b><span>Abiertos hace más de 24 h</span></div></div>
-    <div class="inc-stat on"><i></i><div><b><?= $nHoy ?></b><span>Reportados hoy</span></div></div>
-    <div class="inc-stat ok"><i></i><div><b><?= $nRes ?></b><span>Resueltos</span></div></div>
+$nAb = $nUrg = $nRes = 0;
+foreach ($filas as &$f) {
+    $f['_ab']  = $f['estado'] === 'ABIERTO';
+    $f['_urg'] = $f['_ab'] && ($ahora - strtotime($f['fecha'])) > 86400;
+    if ($f['_ab']) $nAb++; else $nRes++;
+    if ($f['_urg']) $nUrg++;
+}
+unset($f);
+?>
+<link rel="stylesheet" href="<?= Controller::base() ?>/css/incidentes.css">
+
+<div id="imRoot" data-ahora="<?= e(date('Y-m-d\TH:i')) ?>">
+
+  <!-- 1. Qué hay pendiente: pestañas con contador -->
+  <div class="im-tabs" role="tablist" aria-label="Estado de los incidentes">
+    <button type="button" class="im-tab" data-vista="abiertos"  role="tab"><i class="d warn"></i><b data-n="abiertos"><?= $nAb ?></b><span>Por atender</span></button>
+    <button type="button" class="im-tab" data-vista="urgentes"  role="tab"><i class="d bad"></i><b data-n="urgentes"><?= $nUrg ?></b><span>Urgentes <small>+24 h sin resolver</small></span></button>
+    <button type="button" class="im-tab" data-vista="resueltos" role="tab"><i class="d ok"></i><b data-n="resueltos"><?= $nRes ?></b><span>Resueltos</span></button>
+    <button type="button" class="im-tab" data-vista="todos"     role="tab"><i class="d"></i><b data-n="todos"><?= count($filas) ?></b><span>Todos</span></button>
   </div>
 
-  <div class="inc-panel">
-    <div class="inc-head">
-      <div class="inc-row">
-        <h3>Incidentes <span class="tag b" id="incCount"><?= count($filas) ?></span></h3>
-        <input class="inc-search" id="incBuscar" type="search" placeholder="Buscar en la descripción">
-        <button type="button" class="btn y" id="incNuevo">+ Reportar incidente</button>
-      </div>
-      <div class="inc-filtros">
-        <div class="inc-row">
-          <span class="inc-lbl">Estado</span>
-          <button type="button" class="inc-chip on" data-grupo="estado" data-v="">Todos <i><?= count($filas) ?></i></button>
-          <button type="button" class="inc-chip" data-grupo="estado" data-v="ABIERTO">Abiertos <i><?= $nAb ?></i></button>
-          <button type="button" class="inc-chip" data-grupo="estado" data-v="RESUELTO">Resueltos <i><?= $nRes ?></i></button>
-        </div>
-        <div class="inc-row">
-          <span class="inc-lbl">Tipo</span>
-          <button type="button" class="inc-chip on" data-grupo="tipo" data-v="">Todos <i><?= count($filas) ?></i></button>
-          <?php foreach ($tipos as $t => $n): ?>
-            <button type="button" class="inc-chip" data-grupo="tipo" data-v="<?= e($t) ?>"><?= e($t) ?> <i><?= $n ?></i></button>
-          <?php endforeach; ?>
-        </div>
-        <div class="inc-row">
-          <span class="inc-lbl">Sucursal</span>
-          <button type="button" class="inc-chip on" data-grupo="suc" data-v="">Todas <i><?= count($filas) ?></i></button>
-          <?php foreach ($sucs as $nombre): ?>
-            <button type="button" class="inc-chip" data-grupo="suc" data-v="<?= e($nombre) ?>"><?= e($nombre) ?> <i><?= $porSuc[$nombre] ?? 0 ?></i></button>
-          <?php endforeach; ?>
-        </div>
-      </div>
-    </div>
+  <!-- 2. Buscar / filtrar / reportar -->
+  <div class="im-bar">
+    <input class="im-search" id="imBuscar" type="search" placeholder="🔍 Buscar incidente…" autocomplete="off">
+    <select id="imSuc" aria-label="Filtrar por sucursal">
+      <option value="">Todas las sucursales</option>
+      <?php foreach ($sucs as $k => $n): ?><option value="<?= (int)$k ?>"><?= e($n) ?></option><?php endforeach; ?>
+    </select>
+    <select id="imTipo" aria-label="Filtrar por tipo">
+      <option value="">Todos los tipos</option>
+      <?php foreach ($tipos as $t): ?><option value="<?= e($t) ?>"><?= e($icono($t) . ' ' . $t) ?></option><?php endforeach; ?>
+    </select>
+    <button type="button" class="btn y im-nuevo" id="imNuevo">＋ Reportar incidente</button>
+  </div>
 
-    <div class="inc-grid">
-      <?php foreach ($filas as $f):
-          $ab    = $f['estado'] === 'ABIERTO';
-          $tarde = $ab && ($ahora - strtotime($f['fecha'])) > 86400;
-          $fecha = str_replace(' ', 'T', substr($f['fecha'], 0, 16));
-          $tiempo = $hace($f['fecha']);
-      ?>
-        <button type="button" class="inc-item <?= e($f['estado']) ?>"
-                data-id="<?= (int)$f['id'] ?>"
-                data-sucid="<?= (int)$f['sucursal_id'] ?>"
-                data-suc="<?= e($f['sucursal']) ?>"
-                data-tipo="<?= e($f['tipo']) ?>"
-                data-desc="<?= e($f['descripcion']) ?>"
-                data-fecha="<?= e($fecha) ?>"
-                data-est="<?= e($f['estado']) ?>"
-                data-hace="<?= e($tiempo) ?>"
-                data-tarde="<?= $tarde ? '1' : '0' ?>"
-                data-icono="<?= e($icono($f['tipo'])) ?>">
-          <span class="inc-top">
-            <span class="inc-ic"><?= $icono($f['tipo']) ?></span>
-            <span><span class="inc-tp"><?= e($f['tipo']) ?></span><span class="inc-sub"><?= e($f['sucursal']) ?></span></span>
-            <span class="inc-tag <?= e($f['estado']) ?>"><?= e(ucfirst(strtolower($f['estado']))) ?></span>
-          </span>
-          <span class="inc-desc"><?= e($f['descripcion']) ?></span>
-          <span class="inc-foot">
-            <span><?= e(str_replace('T', ' ', $fecha)) ?></span>
-            <span class="inc-age <?= $tarde ? 'late' : '' ?>"><?= $ab ? 'hace ' . e($tiempo) : 'Cerrado' ?></span>
-          </span>
-        </button>
-      <?php endforeach; ?>
-      <div class="empty" id="incVacio" <?= $filas ? 'hidden' : '' ?>>No hay incidentes con esos filtros.</div>
+  <!-- 3. Lista -->
+  <div class="im-list" id="imList">
+    <?php foreach ($filas as $f):
+        $cls = $f['_urg'] ? 'urg' : ($f['_ab'] ? 'ab' : 'res');
+        $fechaIso = str_replace(' ', 'T', substr($f['fecha'], 0, 16));
+    ?>
+      <article class="im-item <?= $cls ?>" tabindex="-1"
+               data-id="<?= (int)$f['id'] ?>"
+               data-sucid="<?= (int)$f['sucursal_id'] ?>"
+               data-tipo="<?= e($f['tipo']) ?>"
+               data-desc="<?= e($f['descripcion']) ?>"
+               data-fecha="<?= e($fechaIso) ?>"
+               data-est="<?= e($f['estado']) ?>"
+               data-urg="<?= $f['_urg'] ? '1' : '0' ?>"
+               data-texto="<?= e(mb_strtolower($f['tipo'] . ' ' . $f['sucursal'] . ' ' . $f['descripcion'])) ?>">
+        <div class="im-ic"><?= $icono($f['tipo']) ?></div>
+        <div class="im-main">
+          <div class="im-meta">
+            <b><?= e($f['tipo']) ?></b>
+            <span>· <?= e($f['sucursal']) ?></span>
+            <?php if ($f['_urg']): ?><span class="im-badge bad">Urgente</span>
+            <?php elseif ($f['_ab']): ?><span class="im-badge warn">Por atender</span>
+            <?php else: ?><span class="im-badge ok">Resuelto</span><?php endif; ?>
+          </div>
+          <p class="im-desc"><?= e($f['descripcion']) ?></p>
+          <div class="im-when">
+            <span title="<?= e(date('d/m/Y H:i', strtotime($f['fecha']))) ?>">🕒 <?= e(date('d/m/Y H:i', strtotime($f['fecha']))) ?></span>
+            <span class="<?= $f['_urg'] ? 'late' : '' ?>"><?= e($hace($f['fecha'])) ?></span>
+          </div>
+        </div>
+        <div class="im-acts">
+          <form method="post" action="<?= Controller::url('incidentes/cambiarestado') ?>">
+            <input type="hidden" name="csrf" value="<?= Controller::csrf() ?>">
+            <input type="hidden" name="id" value="<?= (int)$f['id'] ?>">
+            <input type="hidden" name="estado" value="<?= $f['_ab'] ? 'RESUELTO' : 'ABIERTO' ?>">
+            <?php if ($f['_ab']): ?>
+              <button class="btn im-ok">✓ Marcar resuelto</button>
+            <?php else: ?>
+              <button class="btn g">↺ Reabrir</button>
+            <?php endif; ?>
+          </form>
+          <button type="button" class="btn g im-edit">✎ Editar</button>
+        </div>
+      </article>
+    <?php endforeach; ?>
+
+    <div class="im-vacio" id="imVacio" hidden>
+      <div class="im-vacio-ic" id="imVacioIc">🎉</div>
+      <p id="imVacioTx"></p>
+      <button type="button" class="btn g" id="imLimpiar" hidden>Quitar filtros</button>
     </div>
   </div>
 </div>
 
-<!-- Drawer: detalle y edición en el mismo panel -->
-<div class="inc-scrim" id="incScrim"></div>
-<aside class="inc-drawer" id="incDrawer" role="dialog" aria-modal="true" aria-labelledby="incTitulo">
-  <div class="inc-dh">
-    <h2 id="incTitulo">Detalle del incidente</h2>
-    <button type="button" class="inc-x" id="incCerrar" aria-label="Cerrar">✕</button>
-  </div>
-
-  <!-- Vista de detalle -->
-  <div class="inc-pane" id="incVer">
-    <div class="inc-db">
-      <div class="inc-big">
-        <span class="inc-ic" id="vIcono"></span>
-        <div><div class="inc-tp" id="vTipo" style="font-size:19px"></div><span class="inc-sub" id="vSub"></span></div>
-      </div>
-      <div class="inc-quote" id="vDesc"></div>
-      <div class="inc-dl">
-        <div><span>Estado</span><b id="vEst"></b></div>
-        <div><span>Sucursal</span><b id="vSuc"></b></div>
-        <div><span>Fecha</span><b id="vFecha"></b></div>
-        <div id="rowHace"><span>Tiempo abierto</span><b id="vHace"></b></div>
-      </div>
-      <form method="post" action="<?= Controller::url('incidentes/cambiarestado') ?>">
-        <input type="hidden" name="csrf" value="<?= Controller::csrf() ?>">
-        <input type="hidden" name="id" id="camId">
-        <button class="btn inc-quick" id="camBtn"></button>
-      </form>
-    </div>
-    <div class="inc-df">
-      <form method="post" action="<?= Controller::url('incidentes/eliminar') ?>" data-confirm="¿Eliminar este incidente?">
-        <input type="hidden" name="csrf" value="<?= Controller::csrf() ?>">
-        <input type="hidden" name="id" id="delId">
-        <button class="btn inc-btn-del">Eliminar</button>
-      </form>
-      <button type="button" class="btn inc-btn-k" id="btnEditar">Editar</button>
-    </div>
-  </div>
-
-  <!-- Formulario de edición / nuevo -->
-  <form class="inc-pane" id="incEdit" method="post" action="<?= Controller::url('incidentes/guardar') ?>" hidden>
+<!-- Ventana para reportar / editar -->
+<dialog class="im-dlg" id="imDlg" aria-labelledby="imTitulo">
+  <form method="post" id="imForm" action="<?= Controller::url('incidentes/guardar') ?>">
     <input type="hidden" name="csrf" value="<?= Controller::csrf() ?>">
-    <input type="hidden" name="id" id="eId" value="0">
-    <div class="inc-db">
-      <label class="inc-campo">Sucursal
-        <select name="sucursal_id" id="eSuc" required>
+    <input type="hidden" name="id" id="fId" value="0">
+    <input type="hidden" name="estado" id="fEstado" value="ABIERTO">
+
+    <div class="im-dh">
+      <h2 id="imTitulo">Reportar incidente</h2>
+      <button type="button" class="im-x" id="imCerrar" aria-label="Cerrar">✕</button>
+    </div>
+
+    <div class="im-db">
+      <fieldset class="im-campo">
+        <legend>1. ¿Qué tipo de problema es?</legend>
+        <div class="im-tipos">
+          <?php foreach ($tipos as $i => $t): ?>
+            <label><input type="radio" name="tipo" value="<?= e($t) ?>" required><span><?= e($icono($t)) ?> <?= e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+      </fieldset>
+
+      <label class="im-campo">2. ¿En qué sucursal?
+        <select name="sucursal_id" id="fSuc" required>
+          <option value="" disabled>Elige una sucursal…</option>
           <?php foreach ($sucs as $k => $n): ?><option value="<?= (int)$k ?>"><?= e($n) ?></option><?php endforeach; ?>
         </select>
       </label>
-      <label class="inc-campo">Tipo
-        <input type="text" name="tipo" id="eTipo" maxlength="20" list="incTipos" placeholder="Ej: Seguridad, Equipos, Stock" required>
+
+      <label class="im-campo">3. ¿Qué pasó?
+        <textarea name="descripcion" id="fDesc" maxlength="250" rows="4" required placeholder="Ej: La impresora de tickets de la caja 2 se atasca al imprimir"></textarea>
+        <small><span id="fCnt">0</span>/250</small>
       </label>
-      <datalist id="incTipos"><option>Seguridad</option><option>Equipos</option><option>Stock</option></datalist>
-      <label class="inc-campo">Descripción
-        <textarea name="descripcion" id="eDesc" maxlength="250" required></textarea>
-        <small id="cnt">0/250</small>
+
+      <label class="im-campo">Fecha y hora
+        <input type="datetime-local" name="fecha" id="fFecha">
       </label>
-      <label class="inc-campo">Fecha (vacío = ahora)
-        <input type="datetime-local" name="fecha" id="eFecha">
-      </label>
-      <label class="inc-campo">Estado
-        <select name="estado" id="eEst" required>
-          <option value="ABIERTO">ABIERTO</option>
-          <option value="RESUELTO">RESUELTO</option>
-        </select>
-      </label>
+
+      <div class="im-campo" id="fEstadoBox" hidden>
+        <span class="im-lbl">Estado</span>
+        <div class="im-seg">
+          <label><input type="radio" name="estado_vis" value="ABIERTO"><span>⏳ Por atender</span></label>
+          <label><input type="radio" name="estado_vis" value="RESUELTO"><span>✓ Resuelto</span></label>
+        </div>
+      </div>
     </div>
-    <div class="inc-df">
-      <button type="button" class="btn g" id="btnCancelar">Cancelar</button>
-      <button class="btn y">Guardar cambios</button>
+
+    <div class="im-df">
+      <button type="submit" class="btn im-del" id="fEliminar" form="imDel" hidden>🗑 Eliminar</button>
+      <span class="im-sp"></span>
+      <button type="button" class="btn g" id="fCancelar">Cancelar</button>
+      <button type="submit" class="btn y" id="fGuardar">Reportar incidente</button>
     </div>
   </form>
-</aside>
+
+  <form method="post" id="imDel" action="<?= Controller::url('incidentes/eliminar') ?>" data-confirm="¿Eliminar este incidente definitivamente?">
+    <input type="hidden" name="csrf" value="<?= Controller::csrf() ?>">
+    <input type="hidden" name="id" id="delId" value="0">
+  </form>
+</dialog>
 
 <script src="<?= Controller::base() ?>/js/incidentes.js"></script>
