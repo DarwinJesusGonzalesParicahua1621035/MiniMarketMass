@@ -56,19 +56,33 @@ class StockRepository extends Repository
         return $o;
     }
 
-    // Productos que se manejan en cada sucursal (solo ellos admiten movimientos).
+    // Productos que se manejan en cada sucursal (solo ellos admiten movimientos), con su categoría.
     public function opcionesStock(): array
     {
         return $this->db()->query(
             "SELECT s.id AS sucursal_id, s.nombre AS sucursal,
                     p.id AS producto_id, p.nombre AS producto, p.codigo_barras AS codigo, p.unidad,
+                    c.id AS categoria_id, c.nombre AS categoria,
                     st.cantidad
              FROM stock st
              JOIN sucursal s ON s.id = st.sucursal_id
              JOIN producto p ON p.id = st.producto_id
+             JOIN categoria c ON c.id = p.categoria_id
              WHERE p.activo = 1
              ORDER BY s.nombre, p.nombre"
         )->fetchAll();
+    }
+
+    // Motivos escritos antes en movimientos manuales, del más reciente al más antiguo (sin repetir).
+    // Alimentan las sugerencias del campo "Motivo".
+    public function motivosRecientes(int $limite = 30): array
+    {
+        $q = "SELECT motivo FROM movimiento_stock
+              WHERE motivo IS NOT NULL AND motivo <> '' AND venta_id IS NULL
+              GROUP BY motivo
+              ORDER BY MAX(fecha) DESC, MAX(id) DESC
+              LIMIT " . (int)$limite;
+        return array_map('strval', $this->db()->query($q)->fetchAll(PDO::FETCH_COLUMN));
     }
 
 }
