@@ -10,7 +10,7 @@ class AsistenciaRepository extends Repository
     // Asistencia del empleado en el día de hoy (null si todavía no la registró).
     public function deHoy(int $empleadoId): ?array
     {
-        $s = $this->db()->prepare('SELECT id, entrada, estado FROM asistencia
+        $s = $this->db()->prepare('SELECT id, entrada, salida, estado FROM asistencia
             WHERE empleado_id = ? AND entrada >= ? AND entrada < ? ORDER BY id DESC LIMIT 1');
         $s->execute([$empleadoId, date('Y-m-d 00:00:00'), date('Y-m-d 00:00:00', strtotime('+1 day'))]);
         return $s->fetch() ?: null;
@@ -30,5 +30,23 @@ class AsistenciaRepository extends Repository
             'entrada'     => date('Y-m-d H:i:s'),
             'estado'      => 'PRESENTE',
         ]);
+    }
+
+    // Marca la salida del empleado (una sola vez por día y sin caja abierta).
+    public function registrarSalida(int $empleadoId): void
+    {
+        $a = $this->deHoy($empleadoId);
+        if (!$a) {
+            throw new RuntimeException('primero registra tu asistencia.');
+        }
+        if ($a['salida']) {
+            throw new RuntimeException('ya registraste tu salida hoy.');
+        }
+        $s = $this->db()->prepare("SELECT COUNT(*) FROM historia_caja WHERE empleado_id = ? AND estado = 'ABIERTA'");
+        $s->execute([$empleadoId]);
+        if ((int)$s->fetchColumn() > 0) {
+            throw new RuntimeException('cierra tu caja antes de terminar el turno.');
+        }
+        $this->actualizar($a['id'], ['salida' => date('Y-m-d H:i:s')]);
     }
 }
