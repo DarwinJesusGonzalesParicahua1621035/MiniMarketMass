@@ -1,0 +1,88 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=DM+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root{
+  --y:#ffc400; --b:#2f6bff; --night:#070d26;
+  --bg:#f3f5fb; --card:#fff; --tx:#0b1330; --mut:#5b6482; --line:#dfe4f1; --field:#f8f9fd;
+  --ok:#12b76a; --err:#e5484d;
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+[data-tema="dark"]{
+  --bg:#080d27; --card:#0f1740; --tx:#eef1ff; --mut:#99a3cf; --line:#25305f; --field:#0a1136;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font:15px/1.5 'DM Sans',system-ui,sans-serif;color:var(--tx);background:var(--bg);transition:background .4s,color .4s}
+.shell{display:grid;grid-template-columns:1.15fr 1fr;min-height:100vh}
+
+.brand{position:relative;overflow:hidden;background:var(--night) url('../img/sucursales/1.jpg') center/cover;color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:44px 52px;isolation:isolate}
+.brand::before{content:"";position:absolute;inset:0;z-index:-2;background:linear-gradient(160deg,rgba(7,13,38,.78),rgba(7,13,38,.94) 70%),radial-gradient(60% 50% at 90% 100%,rgba(255,196,0,.28),transparent)}
+.brand::after{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(380px circle at var(--mx,70%) var(--my,40%),rgba(47,107,255,.28),transparent 70%)}
+.logo{display:flex;align-items:center;gap:12px}
+.logo b{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:var(--y);color:#111;font:800 22px 'Bricolage Grotesque';box-shadow:0 8px 24px rgba(255,196,0,.35)}
+.logo span{font:700 16px 'Bricolage Grotesque';line-height:1.2}
+.logo small{display:block;font:400 12px 'DM Sans';opacity:.65}
+.hero h1{font:800 clamp(34px,3.6vw,52px)/1.05 'Bricolage Grotesque';letter-spacing:-.02em;max-width:13ch}
+.hero p{margin-top:14px;max-width:38ch;opacity:.75}
+.stage{display:flex;justify-content:center;align-items:flex-end;min-height:330px;perspective:900px}
+
+.ticket{width:min(300px,88%);background:#fbf8ee;color:#1b1b1b;font:400 12px/1.55 'IBM Plex Mono',monospace;padding:20px 20px 30px;transform:rotate(-2.5deg);transform-origin:top center;
+  -webkit-mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50%/14px 100%;mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50%/14px 100%;
+  box-shadow:0 30px 60px rgba(0,0,0,.45);position:relative;transition:transform .7s var(--ease),opacity .5s}
+.ticket.in{animation:print .9s var(--ease) both}
+.ticket.out{transform:translateY(-60px) rotate(-5deg);opacity:0}
+@keyframes print{from{transform:translateY(40px) rotate(-2.5deg);clip-path:inset(0 0 100% 0)}to{transform:rotate(-2.5deg);clip-path:inset(0)}}
+.ticket h3{font:500 13px 'IBM Plex Mono';text-align:center;letter-spacing:.04em}
+.ticket .sub{text-align:center;color:#777;font-size:11px;margin-bottom:10px;border-bottom:1px dashed #bbb;padding-bottom:8px}
+.ticket ul{list-style:none;padding:0;min-height:98px}
+.ticket li{display:flex;justify-content:space-between;opacity:0;transform:translateX(-8px);transition:.35s var(--ease)}
+.ticket li.on{opacity:1;transform:none;background:linear-gradient(90deg,rgba(255,196,0,.55),transparent) no-repeat;background-size:0 100%;animation:scan .6s .05s ease-out}
+@keyframes scan{from{background-size:0 100%}60%{background-size:100% 100%}to{background-size:100% 100%;background-color:transparent}}
+.ticket .row{display:flex;justify-content:space-between;color:#666;font-size:11px}
+.ticket .tot{display:flex;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px dashed #bbb;font:500 17px 'IBM Plex Mono'}
+.stamp{position:absolute;right:14px;bottom:30px;border:2px solid var(--ok);color:var(--ok);padding:1px 8px;font:500 13px 'IBM Plex Mono';letter-spacing:.08em;border-radius:4px;transform:rotate(-12deg) scale(2);opacity:0;transition:.35s var(--ease)}
+.ticket.done .stamp{transform:rotate(-12deg) scale(1);opacity:.9}
+.brand footer{font-size:12px;opacity:.5}
+
+.panel{position:relative;display:grid;place-items:center;padding:32px}
+.theme{position:absolute;top:20px;right:20px;width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--tx);cursor:pointer;display:grid;place-items:center;transition:.25s}
+.theme:hover{transform:rotate(18deg)}
+.theme .sun{display:none}[data-tema="dark"] .theme .sun{display:block}[data-tema="dark"] .theme .moon{display:none}
+.card{width:min(100%,410px);background:var(--card);border:1px solid var(--line);border-radius:22px;padding:38px 34px;box-shadow:0 24px 60px -24px rgba(20,40,120,.28);animation:rise .8s var(--ease) both}
+@keyframes rise{from{opacity:0;transform:translateY(24px)}}
+.card .mlogo{display:none}
+.card h2{font:800 28px/1.1 'Bricolage Grotesque';letter-spacing:-.02em}
+.card .lead{color:var(--mut);margin:8px 0 26px}
+.alert{display:flex;gap:10px;align-items:flex-start;background:rgba(229,72,77,.1);border:1px solid rgba(229,72,77,.35);color:var(--err);border-radius:12px;padding:11px 14px;margin-bottom:18px;font-size:14px;animation:shake .45s}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.field{position:relative;margin-bottom:14px}
+.field input{width:100%;height:56px;padding:20px 46px 0 46px;border:1.5px solid var(--line);border-radius:14px;background:var(--field);color:var(--tx);font:inherit;outline:0;transition:border-color .2s,box-shadow .2s,background .2s}
+.field label{position:absolute;left:46px;top:17px;color:var(--mut);pointer-events:none;transition:.18s var(--ease);transform-origin:left}
+.field input:focus ~ label,.field input:not(:placeholder-shown) ~ label{transform:translateY(-10px) scale(.8)}
+.field input:focus{border-color:var(--b);background:var(--card);box-shadow:0 0 0 4px rgba(47,107,255,.16)}
+.field .ico{position:absolute;left:15px;top:17px;width:22px;height:22px;color:var(--mut);transition:color .2s}
+.field input:focus ~ .ico{color:var(--b)}
+.eye{position:absolute;right:8px;top:8px;width:40px;height:40px;border:0;border-radius:10px;background:none;color:var(--mut);cursor:pointer;display:grid;place-items:center}
+.eye:hover{background:var(--line)}
+.caps{display:none;align-items:center;gap:6px;margin:-4px 0 12px;color:#b57d00;font-size:13px}
+.caps.show{display:flex}
+.opts{display:flex;justify-content:space-between;align-items:center;margin:6px 0 22px;font-size:14px;color:var(--mut)}
+.chk{display:flex;gap:9px;align-items:center;cursor:pointer;user-select:none}
+.chk input{appearance:none;width:20px;height:20px;border:1.5px solid var(--line);border-radius:6px;background:var(--field);display:grid;place-items:center;cursor:pointer;transition:.2s}
+.chk input:checked{background:var(--b);border-color:var(--b)}
+.chk input:checked::after{content:"";width:9px;height:5px;border:2px solid #fff;border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px)}
+.btn{position:relative;overflow:hidden;width:100%;height:54px;border:0;border-radius:14px;background:linear-gradient(180deg,#ffd23a,var(--y));color:#161200;font:700 16px 'DM Sans';cursor:pointer;box-shadow:0 12px 26px -10px rgba(255,196,0,.8);transition:transform .2s,box-shadow .2s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 16px 30px -10px rgba(255,196,0,.9)}
+.btn:active{transform:none}
+.btn::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.65),transparent);transform:skewX(-20deg);transition:left .7s}
+.btn:hover::after{left:130%}
+.btn .spin{display:none;width:18px;height:18px;border:2.5px solid rgba(0,0,0,.25);border-top-color:#161200;border-radius:50%;animation:rot .7s linear infinite;margin-right:8px;vertical-align:-3px}
+.btn.load{pointer-events:none;opacity:.85}.btn.load .spin{display:inline-block}
+@keyframes rot{to{transform:rotate(360deg)}}
+.help{margin-top:22px;text-align:center;font-size:13px;color:var(--mut)}
+:focus-visible{outline:3px solid var(--b);outline-offset:2px}
+
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr}.brand{display:none}
+  .card .mlogo{display:flex;margin-bottom:22px}.card .mlogo span{color:var(--tx)}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
