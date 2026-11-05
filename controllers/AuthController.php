@@ -10,7 +10,7 @@ class AuthController extends Controller
         }
         $error = null;
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (Auth::login(trim($_POST['usuario'] ?? ''), $_POST['clave'] ?? '')) {
+            if (Auth::login(trim($_POST['usuario'] ?? ''), $_POST['clave'] ?? '', !empty($_POST['recordar']))) {
                 $this->redirect(Auth::inicio(Auth::user()['rol']));
             }
             $error = 'Usuario o clave incorrectos, o sin acceso al sistema.';
