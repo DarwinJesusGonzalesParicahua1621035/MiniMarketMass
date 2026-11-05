@@ -84,8 +84,12 @@ class AuthController extends Controller
         $this->render('auth/seguridad', compact('activo', 'secreto', 'uri', 'ok', 'error', 'solo') + ['titulo' => 'Seguridad'], !$solo);
     }
 
-    public function salir(): void
+     public function salir(): void
     {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . self::url('auth/login'));
+            exit;
+        }
         Auth::logout();
         header('Location: ' . self::url('auth/login'));
         exit;

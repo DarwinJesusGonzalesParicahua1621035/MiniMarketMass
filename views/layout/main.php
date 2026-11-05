@@ -35,8 +35,12 @@ try {
       <?php endforeach; ?>
     <?php endforeach; ?>
   </nav>
-  <div class="me"><b><?= e(mb_substr($user['nombre'], 0, 1)) ?></b>
-    <div><?= e($user['nombre']) ?><small><a href="<?= Controller::url('auth/salir') ?>">Cerrar sesión</a></small></div></div>
+   <div class="me"><b><?= e(mb_substr($user['nombre'], 0, 1)) ?></b>
+    <div><?= e($user['nombre']) ?><small>
+      <form method="post" action="<?= Controller::url('auth/salir') ?>" class="salir-form">
+        <input type="hidden" name="csrf" value="<?= e(Controller::csrf()) ?>">
+        <button type="submit">Cerrar sesión</button>
+      </form></small></div></div>
 </aside>
 <main>
   <header><button id="menu">☰</button><h1><?= e($titulo ?? '') ?></h1></header>
