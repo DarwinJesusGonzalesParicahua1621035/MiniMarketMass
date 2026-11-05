@@ -108,11 +108,11 @@ $json = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESC
         <div class="as-err" id="asEErr"></div>
         <label class="as-campo">Estado
           <select name="estado" id="asEEst" required>
-            <option value="PRESENTE">Presente</option>
-            <option value="TARDANZA">Tardanza</option>
-            <option value="FALTA">Falta</option>
+            <option value="AUTO">Automático (según la hora de entrada)</option>
+            <option value="FALTA">Falta (no marcó asistencia)</option>
           </select>
         </label>
+        <p class="as-regla">Temprano: hasta las <?= AsistenciaRepository::LIMITE_TARDE ?> · Tarde: después de las <?= AsistenciaRepository::LIMITE_TARDE ?> · Falta: solo si se registra manualmente</p>
       </div>
       <div class="as-df">
         <button type="button" class="as-btn as-g" id="asBCancelar">Cancelar</button>

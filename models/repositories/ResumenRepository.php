@@ -48,13 +48,38 @@ class ResumenRepository extends Repository
             GROUP BY v.sucursal_id, p.medio_pago");
     }
 
-    public function ultimas(): array
+    // Estado de cada sucursal hoy: cajas abiertas y personal con su asistencia del día.
+    // Devuelve [sucursal_id => ['id','nombre','direccion','cajas','abiertas','empleados' => [...]]]
+    public function sucursalesHoy(): array
     {
-        return $this->filas("SELECT CONCAT(v.serie, '-', LPAD(v.correlativo, 6, '0')) AS comprobante,
-            DATE_FORMAT(v.fecha, '%d/%m/%Y %H:%i') AS fecha,
-            s.nombre AS sucursal, COALESCE(c.nombre, '—') AS cliente, v.total, v.estado
-            FROM venta v JOIN sucursal s ON s.id = v.sucursal_id LEFT JOIN cliente c ON c.id = v.cliente_id
-            ORDER BY v.fecha DESC, v.id DESC LIMIT 5");
+        $out = [];
+        foreach ($this->filas("SELECT s.id, s.nombre, s.direccion,
+                (SELECT COUNT(*) FROM caja c WHERE c.sucursal_id = s.id) AS cajas,
+                (SELECT COUNT(*) FROM caja c JOIN historia_caja h ON h.caja_id = c.id AND h.estado = 'ABIERTA'
+                    WHERE c.sucursal_id = s.id) AS abiertas
+            FROM sucursal s ORDER BY s.id") as $s) {
+            $out[(int)$s['id']] = [
+                'id' => (int)$s['id'], 'nombre' => $s['nombre'], 'direccion' => $s['direccion'],
+                'cajas' => (int)$s['cajas'], 'abiertas' => (int)$s['abiertas'], 'empleados' => [],
+            ];
+        }
+        // Empleados activos de cada sucursal + su último registro de asistencia de hoy (si lo hay)
+        foreach ($this->filas("SELECT e.id, e.sucursal_id, e.nombre, e.rol, a.entrada, a.estado
+            FROM empleado e
+            LEFT JOIN asistencia a ON a.id = (
+                SELECT MAX(x.id) FROM asistencia x
+                WHERE x.empleado_id = e.id AND x.entrada >= CURDATE() AND x.entrada < CURDATE() + INTERVAL 1 DAY)
+            WHERE e.activo = 1 ORDER BY e.nombre") as $e) {
+            $sid = (int)$e['sucursal_id'];
+            if (!isset($out[$sid])) continue;
+            $reg = $e['entrada'] !== null ? ['entrada' => $e['entrada'], 'estado' => $e['estado']] : null;
+            $out[$sid]['empleados'][] = [
+                'nombre' => $e['nombre'], 'rol' => $e['rol'],
+                'entrada' => $reg ? $e['entrada'] : null,
+                'clase' => AsistenciaRepository::clasificar($reg),
+            ];
+        }
+        return $out;
     }
 
     public function stockBajo(): array

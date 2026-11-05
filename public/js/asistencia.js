@@ -17,14 +17,15 @@
   function dia(off) { var d = new Date(HOY + 'T00:00'); d.setDate(d.getDate() - off); return iso(d); }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function ini(n) { return String(n).trim().split(/\s+/).slice(0, 2).map(function (w) { return w.charAt(0).toUpperCase(); }).join(''); }
-  function cap(s) { return s.charAt(0) + s.slice(1).toLowerCase(); }
+  var LBL = { PRESENTE: 'Temprano', TARDANZA: 'Tarde', FALTA: 'Falta' };   // el valor guardado sigue siendo PRESENTE/TARDANZA/FALTA
+  function cap(s) { return LBL[s] || s; }
   function ymd(r) { return r.in.slice(0, 10); }
   function fechaCorta(s) { return new Date(s + 'T00:00').toLocaleDateString('es-PE', { weekday: 'short', day: 'numeric', month: 'short' }); }
   function etq(s) { return s === HOY ? 'Hoy' : s === dia(1) ? 'Ayer' : fechaCorta(s); }
 
   /* Datos derivados de un registro */
   function info(r) {
-    var falta = r.est === 'FALTA', d = ymd(r), turno = !falta && !r.out && d === HOY, min = null;
+    var falta = r.est === 'FALTA' && r.in.slice(11, 16) === '00:00', d = ymd(r), turno = !falta && !r.out && d === HOY, min = null;
     if (!falta && (r.out || turno)) {
       var fin = r.out ? new Date(r.out) : NOW;
       min = Math.max(0, Math.round((fin - new Date(r.in)) / 60000));
@@ -67,8 +68,8 @@
     var turno = b.filter(function (r) { return info(r).turno; }).length, n = b.length;
     var pct = function (x) { return n ? Math.round(x * 100 / n) + '%' : '—'; };
     var S = [
-      ['PRESENTE', 'ok', '✅', c('PRESENTE'), 'Presentes', pct(c('PRESENTE'))],
-      ['TARDANZA', 'warn', '⏰', c('TARDANZA'), 'Tardanzas', pct(c('TARDANZA'))],
+      ['PRESENTE', 'ok', '✅', c('PRESENTE'), 'Temprano', pct(c('PRESENTE'))],
+      ['TARDANZA', 'warn', '⏰', c('TARDANZA'), 'Tarde', pct(c('TARDANZA'))],
       ['FALTA', 'bad', '🚫', c('FALTA'), 'Faltas', pct(c('FALTA'))],
       ['TURNO', 'live', '🟢', turno, 'En turno ahora', '']
     ];
@@ -79,7 +80,7 @@
   }
   function pintarChips(b) {
     var c = function (e) { return b.filter(function (r) { return r.est === e; }).length; };
-    var C = [['', 'Todos', b.length], ['PRESENTE', 'Presente', c('PRESENTE')], ['TARDANZA', 'Tardanza', c('TARDANZA')], ['FALTA', 'Falta', c('FALTA')]];
+    var C = [['', 'Todos', b.length], ['PRESENTE', 'Temprano', c('PRESENTE')], ['TARDANZA', 'Tarde', c('TARDANZA')], ['FALTA', 'Falta', c('FALTA')]];
     $('asChips').innerHTML = C.map(function (x) {
       return '<button type="button" class="as-chip' + (st.estado === x[0] ? ' as-on' : '') + '" data-e="' + x[0] + '">' +
         (x[0] ? '<span class="as-dot as-' + x[0] + '"></span>' : '') + x[1] + '<small>' + x[2] + '</small></button>';
@@ -173,7 +174,7 @@
     var r = st.actual;
     $('asTit').textContent = 'Editar asistencia';
     $('asEId').value = r.id; $('asEEmp').value = r.empid;
-    $('asEIn').value = r.in; $('asEOut').value = r.out; $('asEEst').value = r.est;
+    $('asEIn').value = r.in; $('asEOut').value = r.out; $('asEEst').value = info(r).falta ? 'FALTA' : 'AUTO';
     $('asEErr').textContent = '';
     $('asVer').hidden = true; $('asEdit').hidden = false; $('asEIn').focus();
   }

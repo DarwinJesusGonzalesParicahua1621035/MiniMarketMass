@@ -128,6 +128,7 @@
 #asRoot .as-campo{display:block;margin-bottom:16px;font-size:13px;font-weight:700;color:var(--ink)}
 #asRoot .as-campo input,#asRoot .as-campo select{display:block;width:100%;margin-top:6px;padding:11px 13px;border:1px solid #d1d5db;border-radius:11px;font:inherit;font-weight:400;background:#fff;outline:none}
 #asRoot .as-campo input:focus,#asRoot .as-campo select:focus{border-color:var(--y);box-shadow:0 0 0 3px #ffc40040}
+#asRoot .as-regla{font-size:12px;color:var(--mut);background:var(--g1);border-radius:10px;padding:9px 12px;margin-top:-4px}
 #asRoot .as-err{color:var(--bad);font-size:12.5px;min-height:1em;margin:-8px 0 14px}
 #asRoot .as-df{display:flex;gap:10px;padding:16px 22px;border-top:1px solid var(--line)}
 #asRoot .as-btn{flex:1;border:0;border-radius:10px;padding:12px 18px;font-weight:700;cursor:pointer}

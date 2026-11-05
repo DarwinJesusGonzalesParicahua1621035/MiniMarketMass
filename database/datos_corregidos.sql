@@ -73,7 +73,7 @@ INSERT INTO movimiento_stock (sucursal_id, producto_id, empleado_id, venta_id, t
 
 INSERT INTO asistencia (empleado_id, entrada, salida, estado) VALUES
  (2, CONCAT(CURDATE(), ' 07:55:00'), NULL, 'PRESENTE'),
- (3, CONCAT(CURDATE(), ' 08:20:00'), NULL, 'TARDANZA'),
+ (3, CONCAT(CURDATE(), ' 08:20:00'), NULL, 'PRESENTE'),
  (1, CONCAT(CURDATE(), ' 07:45:00'), NULL, 'PRESENTE'),
  (4, CONCAT(CURDATE(), ' 00:00:00'), NULL, 'FALTA');
 
