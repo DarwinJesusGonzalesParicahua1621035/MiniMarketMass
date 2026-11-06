@@ -1,5 +1,17 @@
-/* Estilo del botón flotante */
+/* Estilo del botón de la luna en el header */
 #theme-toggle {
+    margin-left: auto; /* Lo empuja a la derecha */
+    background: #F3F4F6;
+    border: 1px solid #ccc;
+    border-radius: 50%; /* Lo hace un círculo perfecto */
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
     transition: background 0.3s, transform 0.2s;
 }
 
@@ -7,4 +19,11 @@
     transform: scale(1.1);
     background: #FFC400 !important;
     color: #111;
+}
+
+/* Ajuste para cuando esté en modo oscuro */
+[data-theme="dark"] #theme-toggle {
+    background: #1D222A;
+    border-color: #2A303A;
+    color: #F1F3F5;
 }
