@@ -1,0 +1,10 @@
+/* Estilo del botón flotante */
+#theme-toggle {
+    transition: background 0.3s, transform 0.2s;
+}
+
+#theme-toggle:hover {
+    transform: scale(1.1);
+    background: #FFC400 !important;
+    color: #111;
+}
