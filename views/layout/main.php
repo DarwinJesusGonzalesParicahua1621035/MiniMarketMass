@@ -7,17 +7,17 @@ $menu = [
     'Configuración' => [['sucursales', '🏬', 'Sucursales'], ['incidentes', '⚠️', 'Incidentes'], ['seguridad', '🔐', 'Seguridad']],
 ];
 $actual = explode('/', $_GET['r'] ?? 'dashboard/index')[0];
-<<<<<<< HEAD
-$tema = (isset($_COOKIE['theme']) && $_COOKIE['theme'] === 'dark') ? 'dark' : 'light';
-=======
 
+// Leer la cookie del tema
+$tema = (isset($_COOKIE['theme']) && $_COOKIE['theme'] === 'dark') ? 'dark' : 'light';
+
+// Comprobación del 2FA (módulo de tus compañeros)
 $seg2fa = false;
 try {
     $q2 = Database::pdo()->prepare('SELECT totp_activo FROM empleado WHERE id = ?');
     $q2->execute([$user['id'] ?? 0]);
     $seg2fa = (bool)$q2->fetchColumn();
 } catch (Throwable $e) {}
->>>>>>> b96001e111fd6041ebc577a8f1fdc54b3700dd9e
 ?>
 <!DOCTYPE html>
 <html lang="es" data-theme="<?= $tema ?>">
@@ -287,8 +287,6 @@ try {
     /* ========================================== */
     /* 18. SOLUCIÓN DEFINITIVA PARA EL MODAL DE CAJA (dialog) */
     /* ========================================== */
-    
-    /* El contenedor del modal (la etiqueta <dialog>) */
     html[data-theme="dark"] dialog,
     html[data-theme="dark"] dialog.cj-d {
         background-color: #161A20 !important; 
@@ -296,39 +294,29 @@ try {
         color: #F1F3F5 !important;
         box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
     }
-
-    /* Los formularios y divs dentro del modal */
     html[data-theme="dark"] dialog form,
     html[data-theme="dark"] dialog div {
         background-color: #161A20 !important;
         color: #F1F3F5 !important;
     }
-
-    /* Títulos y textos */
     html[data-theme="dark"] dialog h3,
     html[data-theme="dark"] dialog p,
     html[data-theme="dark"] dialog label,
     html[data-theme="dark"] dialog span {
         color: #F1F3F5 !important;
     }
-
-    /* Inputs y selects dentro del modal */
     html[data-theme="dark"] dialog input,
     html[data-theme="dark"] dialog select {
         background-color: #1D222A !important;
         color: #F1F3F5 !important;
         border: 1px solid #2A303A !important;
     }
-
-    /* Botón de Guardar/Abrir (Amarillo) */
     html[data-theme="dark"] dialog .btn.y,
     html[data-theme="dark"] dialog button[type="submit"] {
         background-color: #FFC400 !important;
         color: #111318 !important;
         border-color: #FFC400 !important;
     }
-
-    /* Botón de Cancelar/Cerrar (Gris) */
     html[data-theme="dark"] dialog .btn.g,
     html[data-theme="dark"] dialog button[type="button"] {
         background-color: #2A303A !important;
@@ -337,7 +325,7 @@ try {
     }
 
     /* ========================================== */
-    /* 19. REGLA DE ORO FINAL (Cualquier fondo blanco) */
+    /* 19. REGLA DE ORO FINAL */
     /* ========================================== */
     html[data-theme="dark"] *[style*="background-color: white"],
     html[data-theme="dark"] *[style*="background-color: #fff"],
@@ -413,6 +401,8 @@ try {
 </script>
 
 <script src="<?= Controller::base() ?>/js/app.js"></script>
+
+<!-- Script del módulo de Seguridad de tus compañeros -->
 <script>
 (function(){
   var a=document.querySelector('a[href*="r=seguridad"]'); if(!a) return;
