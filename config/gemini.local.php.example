@@ -1,0 +1,13 @@
+<?php
+// 1) Copia este archivo como  config/gemini.local.php
+// 2) Pega tu clave de https://aistudio.google.com/apikey
+// gemini.local.php NO se sube a git (está en .gitignore): la clave es personal.
+return [
+    'key' => 'PEGA_AQUI_TU_CLAVE',
+    // Usuario MySQL de solo lectura del asistente (se crea ejecutando database/migracion_ia_v5.sql).
+    // Si cambias la contraseña en ese script, ponla igual aquí.
+    'db_user' => 'ia_lector',
+    'db_pass' => 'ia_lector_2026',
+    // Opcional: modelos a probar, en orden.
+    // 'modelos' => ['gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-2.5-flash'],
+];
