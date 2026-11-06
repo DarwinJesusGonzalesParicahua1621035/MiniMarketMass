@@ -80,8 +80,19 @@ class AuthController extends Controller
             $secreto = $_SESSION['totp_nuevo'] ??= Totp::secreto();
             $uri = Totp::uri($secreto, $u['nombre']);
         }
-        $solo = $u['rol'] === 'CAJERO';
-        $this->render('auth/seguridad', compact('activo', 'secreto', 'uri', 'ok', 'error', 'solo') + ['titulo' => 'Seguridad'], !$solo);
+        // OJO: no llamar "activo" a esta variable; el menú del cajero usa $activo para marcar la opción actual.
+        $datos = compact('secreto', 'uri', 'ok', 'error') + ['totp' => $activo, 'titulo' => 'Seguridad'];
+        if ($u['rol'] === 'CAJERO') {
+            // El cajero la ve dentro de su panel, con el menú lateral.
+            $pos = new PosRepository();
+            $turno = $pos->turno((int)$u['id']);
+            $this->render('cajero/seguridad', $datos + [
+                'turno'    => $turno,
+                'sucursal' => $turno['sucursal'] ?? $pos->sucursalDe((int)$u['id']),
+            ], false);
+            return;
+        }
+        $this->render('auth/seguridad', $datos);
     }
 
     public function salir(): void

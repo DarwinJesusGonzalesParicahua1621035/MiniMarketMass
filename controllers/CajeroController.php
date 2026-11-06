@@ -87,7 +87,7 @@ class CajeroController extends Controller
     public function incidencia(): void
     {
         $volver = (string)($_POST['volver'] ?? '');
-        if (!in_array($volver, ['cajero/venta', 'cajero/ventas', 'cajero/caja', 'cajero/clientes'], true)) {
+        if (!in_array($volver, ['cajero/venta', 'cajero/caja', 'cajero/clientes'], true)) {
             $volver = 'cajero/caja';
         }
         $ajax = ($_POST['ajax'] ?? '') === '1';
@@ -274,44 +274,6 @@ class CajeroController extends Controller
             }
             $this->json(['ok' => false, 'error' => 'Error interno: ' . $e->getMessage()], 500);
         }
-    }
-
-    // Mis ventas: comprobantes del cajero en un día.
-    public function ventas(): void
-    {
-        $b = $this->contexto();
-        $f = (string)($_GET['fecha'] ?? '');
-        $d = DateTime::createFromFormat('Y-m-d', $f);
-        $dia = ($d && $d->format('Y-m-d') === $f) ? $f : date('Y-m-d');
-        $filas = (new PosRepository())->misVentas((int)Auth::user()['id'], $dia);
-        $this->render('cajero/ventas', [
-            'titulo' => 'Mis ventas', 'dia' => $dia, 'filas' => $filas,
-            'urlDetalle' => self::url('cajero/detalle'),
-        ] + $b, false);
-    }
-
-    // Detalle de una venta para el ticket (responde JSON).
-    public function detalle(): void
-    {
-        $u = Auth::user();
-        $ventas = new VentaRepository();
-        $v = $ventas->venta((int)($_GET['id'] ?? 0));
-        if (!$v || ($u['rol'] !== 'ADMINISTRADOR' && (int)$v['empleado_id'] !== (int)$u['id'])) {
-            $this->json(['ok' => false, 'error' => 'Venta no encontrada.'], 404);
-        }
-        $c = $v['cliente_id'] ? (new ClienteRepository())->buscar($v['cliente_id']) : null;
-        $this->json([
-            'ok' => true,
-            'venta' => [
-                'tipo' => $v['tipo_comprobante'], 'comprobante' => $v['comprobante'], 'fecha' => $v['fecha'],
-                'estado' => $v['estado'], 'cliente' => $v['cliente'],
-                'doc' => $c ? $c['tipo_documento'] . ' ' . $c['numero_documento'] : '',
-                'subtotal' => (float)$v['subtotal'], 'igv' => (float)$v['igv'], 'total' => (float)$v['total'],
-                'cajero' => $v['cajero'], 'sucursal' => $v['sucursal'],
-            ],
-            'items' => $ventas->detalle((int)$v['id']),
-            'pagos' => $ventas->pagos((int)$v['id']),
-        ]);
     }
 
     // Clientes: consulta por nombre, DNI o RUC.

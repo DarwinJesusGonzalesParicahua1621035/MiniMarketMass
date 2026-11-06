@@ -261,20 +261,6 @@ class PosRepository extends Repository
         return $s->fetchAll();
     }
 
-    // Ventas que emitió un cajero en un día (para "Mis ventas").
-    public function misVentas(int $empleadoId, string $dia): array
-    {
-        $s = $this->db()->prepare("SELECT v.id, CONCAT(v.serie, '-', LPAD(v.correlativo, 6, '0')) AS comprobante,
-                v.tipo_comprobante AS tipo, v.fecha, COALESCE(c.nombre, '—') AS cliente, v.total, v.estado,
-                (SELECT GROUP_CONCAT(DISTINCT pv.medio_pago ORDER BY pv.medio_pago SEPARATOR ', ')
-                   FROM pago_venta pv WHERE pv.venta_id = v.id) AS pagos
-            FROM venta v LEFT JOIN cliente c ON c.id = v.cliente_id
-            WHERE v.empleado_id = ? AND v.fecha >= ? AND v.fecha < ?
-            ORDER BY v.fecha DESC, v.id DESC");
-        $s->execute([$empleadoId, $dia, date('Y-m-d', strtotime($dia . ' +1 day'))]);
-        return $s->fetchAll();
-    }
-
     // Búsqueda de clientes por nombre o documento (para "Clientes").
     public function clientes(string $q): array
     {

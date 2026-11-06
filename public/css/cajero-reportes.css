@@ -1,0 +1,68 @@
+/* ===================================================
+   Ventanas de reportes del cajero (Incidencias y Merma / ajuste).
+   Se carga desde views/cajero/_reportes.php, así se ve igual en
+   Nueva venta, Mi caja y Clientes (sin depender de app.css ni de
+   cajero-panel.css). Todo va dentro de #repBox.
+   =================================================== */
+#repBox{--y:#FFC400;--y2:#FFF3C4;--k:#0F1115;--b:#1F4FD8;--g1:#F1F3F8;--g2:#E3E6EE;--g3:#9AA0AA;--g4:#5B616C;--ok:#17a35a;--bad:#d93a3a;color:var(--k)}
+#repBox button{font:inherit;cursor:pointer}
+#repBox h3{font-size:20px;margin-bottom:8px}
+
+/* Textos y etiquetas */
+#repBox .rep-p{color:var(--g4);font-size:13px;margin-bottom:4px}
+#repBox .rep-l{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;font-weight:700;color:var(--g4);margin:14px 0 6px}
+#repBox .rep-l small{font-weight:600;color:var(--g3)}
+#repBox .rep-sum{background:var(--g1);border-radius:14px;padding:11px 14px;font-size:13px;margin-top:14px}
+#repBox .rep-sum b{font-size:15px}
+#repBox .bad-t{color:var(--bad)}
+#repBox .ok-t{color:var(--ok);font-weight:700}
+
+/* Campos */
+#repBox .inp{width:100%;padding:11px 14px;border:1px solid var(--g2);border-radius:14px;font:inherit;font-size:14px;outline:none;background:#fff;color:var(--k)}
+#repBox .inp:focus{border-color:var(--b);box-shadow:0 0 0 3px #E8EEFD}
+#repBox textarea.inp{min-height:96px;resize:vertical}
+#repBox select.inp{cursor:pointer}
+
+/* Botones de abajo */
+#repBox .mrow{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+#repBox .mrow .btn{flex:1}
+#repBox .btn{display:inline-block;border:0;border-radius:14px;padding:12px 20px;font-weight:700;background:var(--k);color:#fff;text-align:center}
+#repBox .btn.y{background:var(--y);color:var(--k);box-shadow:0 6px 16px rgba(255,196,0,.35)}
+#repBox .btn.y:hover{background:#e6b000}
+#repBox .btn.g{background:#fff;color:var(--k);border:1px solid var(--g2)}
+#repBox .btn.g:hover{background:var(--g1)}
+#repBox .btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+
+/* Merma | Ajuste de stock */
+#repBox .seg{display:grid;grid-template-columns:1fr 1fr;background:var(--g1);border-radius:12px;padding:4px}
+#repBox .seg button{border:0;background:transparent;padding:8px;border-radius:9px;font-weight:600;color:var(--g4)}
+#repBox .seg button.on{background:#fff;color:var(--k);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+#repBox .rep-seg{margin-bottom:10px}
+
+/* Categorías y motivos rápidos (píldoras) */
+#repBox .rep-cats,#repBox .chips{display:flex;gap:6px;flex-wrap:wrap}
+#repBox .rep-cats{margin-bottom:10px}
+#repBox .chips{margin-top:10px}
+#repBox .rep-cats button,#repBox .chips button{border:1px solid var(--g2);background:#fff;color:var(--k);border-radius:99px;padding:6px 13px;font-size:12px;font-weight:600}
+#repBox .rep-cats button:hover,#repBox .chips button:hover{border-color:var(--y);background:var(--y2)}
+#repBox .rep-cats button.on,#repBox .chips button.on{background:var(--k);color:var(--y);border-color:var(--k)}
+
+/* Cada producto de la lista */
+#repBox .rep-line{background:var(--g1);border-radius:14px;padding:10px;margin-bottom:8px;display:grid;gap:8px}
+#repBox .rep-line select.inp,#repBox .rep-line input.inp{background:#fff;padding:9px 12px;border-radius:12px}
+#repBox .rep-line-qty{display:flex;gap:7px;align-items:center}
+#repBox .rep-line-qty .inp{flex:1;min-width:0;text-align:center;font-weight:800;font-size:15px}
+#repBox .rep-step,#repBox .rep-del{width:40px;height:40px;flex-shrink:0;border:1px solid var(--g2);background:#fff;border-radius:12px;font-weight:800;color:var(--k);display:grid;place-items:center;line-height:1;transition:.12s}
+#repBox .rep-step{font-size:20px}
+#repBox .rep-step:hover{border-color:var(--y);background:var(--y2)}
+#repBox .rep-step:active{transform:scale(.94)}
+#repBox .rep-del{font-size:15px;color:var(--bad)}
+#repBox .rep-del:hover{background:#fbe5e5;border-color:#f1c3c3}
+#repBox .rep-line-info{font-size:11.5px;color:var(--g4);padding:0 2px}
+#repBox .rep-line-info.bad{color:var(--bad);font-weight:600}
+#repBox .rep-add{width:100%;border:1px dashed var(--g2);margin-bottom:4px}
+
+/* Resultado */
+#repBox .rep-res{display:flex;justify-content:space-between;gap:10px;padding:3px 0;font-size:12.5px}
+#repBox .rep-res span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#repBox .rep-res b{white-space:nowrap}
