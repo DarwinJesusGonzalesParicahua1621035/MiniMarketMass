@@ -1,0 +1,4 @@
+ALTER TABLE empleado
+  ADD COLUMN totp_secreto VARCHAR(64) NULL,
+  ADD COLUMN totp_activo TINYINT(1) NOT NULL DEFAULT 0,
+  ADD COLUMN totp_ultimo BIGINT NULL;

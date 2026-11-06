@@ -7,12 +7,15 @@ class StockController extends Controller
     {
         $r = new StockRepository();
         $sucursal = (int)($_GET['sucursal'] ?? 0) ?: null;
+        $sucursales = $r->pares('SELECT id, nombre FROM sucursal ORDER BY nombre');
+        if ($sucursal && !isset($sucursales[$sucursal])) {
+            $sucursal = null;
+        }
         $this->render('stock/index', [
             'titulo'      => 'Stock',
-            'filas'       => $r->resumen($sucursal),
-            'sucursales'  => $r->pares('SELECT id, nombre FROM sucursal ORDER BY nombre'),
+            'inventario'  => $r->inventario(),
+            'sucursales'  => $sucursales,
             'sucursalSel' => $sucursal,
-            'faltantes'   => $r->faltantes(),
         ]);
     }
 
@@ -21,7 +24,7 @@ class StockController extends Controller
         $r = new StockRepository();
         $sucursal = (int)($_GET['sucursal'] ?? 0) ?: null;
         $tipo = strtoupper(trim($_GET['tipo'] ?? ''));
-        if (!in_array($tipo, ['ENTRADA', 'SALIDA', 'AJUSTE', 'MERMA'], true)) {
+        if (!in_array($tipo, ['ENTRADA', 'SALIDA', 'VENTA'], true)) {
             $tipo = null;
         }
         $this->render('stock/movimientos', [
@@ -40,52 +43,88 @@ class StockController extends Controller
         $old = $_SESSION['stock_old'] ?? [];
         unset($_SESSION['stock_old']);
         $this->render('stock/registrar', [
-            'titulo' => 'Registrar movimiento',
-            'stocks' => $r->opcionesStock(),
-            'old'    => $old,
+            'titulo'     => 'Registrar movimiento',
+            'stocks'     => $r->opcionesStock(),
+            'categorias' => $r->pares('SELECT id, nombre FROM categoria ORDER BY nombre'),
+            'motivos'    => $r->motivosRecientes(),
+            'old'        => $old,
         ]);
     }
 
+    /**
+     * Guarda UN movimiento con VARIOS productos de la misma sucursal.
+     * Todo o nada: si una línea falla (por ejemplo stock insuficiente), no se guarda ninguna.
+     * POST: sucursal, tipo (ENTRADA|SALIDA), motivo, items[producto_id] = cantidad
+     */
     public function guardar(): void
     {
-        [$sucursalId, $productoId] = array_pad(explode('-', (string)($_POST['stock'] ?? ''), 2), 2, '0');
-                try {
-            $cant = trim((string)($_POST['cantidad'] ?? ''));
-            if (!preg_match('/^[1-9]\d{0,6}$/', $cant)) {
-                throw new InvalidArgumentException('La cantidad debe ser un número entero mayor que 0, sin decimales.');
+        $sucursalId = (string)($_POST['sucursal'] ?? '');
+        $tipo       = (string)($_POST['tipo'] ?? '');
+        $motivo     = trim((string)($_POST['motivo'] ?? ''));
+        $items      = is_array($_POST['items'] ?? null) ? $_POST['items'] : [];
+        $db = null;
+        try {
+            if (!preg_match('/^\d+$/', $sucursalId) || (int)$sucursalId <= 0) {
+                throw new InvalidArgumentException('Elige una sucursal.');
             }
-            $u = Auth::user();
-            (new MovimientoStock(Database::pdo()))->registrar([
-                'sucursal_id' => $sucursalId,
-                'producto_id' => $productoId,
-                'empleado_id' => $u['id'],
-                'tipo'        => $_POST['tipo'] ?? '',
-                'cantidad'    => $_POST['cantidad'] ?? '',
-                'motivo'      => $_POST['motivo'] ?? '',
-            ]);
-            $this->flash('Movimiento registrado');
+            // Las ventas las registra el punto de venta; aquí solo entradas y salidas manuales.
+            if (!in_array($tipo, ['ENTRADA', 'SALIDA'], true)) {
+                throw new InvalidArgumentException('Elige si es una entrada o una salida.');
+            }
+            if (!$items) {
+                throw new InvalidArgumentException('Agrega al menos un producto.');
+            }
+            if (count($items) > 100) {
+                throw new InvalidArgumentException('Máximo 100 productos por movimiento.');
+            }
+
+            $lineas = [];
+            foreach ($items as $pid => $cant) {
+                $cant = trim((string)$cant);
+                if (!preg_match('/^\d+$/', (string)$pid) || (int)$pid <= 0) {
+                    throw new InvalidArgumentException('Hay un producto inválido en la lista.');
+                }
+                if (!preg_match('/^\d{1,7}$/', $cant) || (int)$cant <= 0) {
+                    throw new InvalidArgumentException('Cada cantidad debe ser un número entero mayor que 0.');
+                }
+                $lineas[(int)$pid] = $cant;
+            }
+            ksort($lineas);   // orden fijo: evita bloqueos cruzados si dos usuarios guardan a la vez
+
+            $u   = Auth::user();
+            $db  = Database::pdo();
+            $mov = new MovimientoStock($db);
+
+            // MovimientoStock::registrar() se une a esta transacción en vez de abrir otra.
+            $db->beginTransaction();
+            foreach ($lineas as $pid => $cant) {
+                $mov->registrar([
+                    'sucursal_id' => $sucursalId,
+                    'producto_id' => $pid,
+                    'empleado_id' => $u['id'],
+                    'tipo'        => $tipo,
+                    'cantidad'    => $cant,
+                    'motivo'      => $motivo,
+                ]);
+            }
+            $db->commit();
+
+            $n = count($lineas);
+            $this->flash($n === 1 ? 'Movimiento registrado' : "Movimiento registrado: $n productos actualizados");
             $this->redirect('stock/movimientos');
         } catch (InvalidArgumentException | RuntimeException | PDOException $e) {
+            if ($db && $db->inTransaction()) {
+                $db->rollBack();
+            }
             $_SESSION['stock_old'] = [
-                'stock'    => (string)($_POST['stock'] ?? ''),
-                'tipo'     => (string)($_POST['tipo'] ?? ''),
-                'cantidad' => (string)($_POST['cantidad'] ?? ''),
-                'motivo'   => (string)($_POST['motivo'] ?? ''),
+                'sucursal' => $sucursalId,
+                'tipo'     => $tipo,
+                'motivo'   => $motivo,
+                'items'    => array_map('strval', $items),
             ];
-            $this->flash('No se pudo registrar: ' . $this->mensaje($e), 'err');
+            $this->flash('No se pudo registrar (no se guardó ningún producto): ' . $this->mensaje($e), 'err');
             $this->redirect('stock/registrar');
         }
     }
 
-    public function inicializar(): void
-    {
-        [$sucursalId, $productoId] = array_pad(explode('-', (string)($_POST['faltante'] ?? ''), 2), 2, '0');
-        try {
-            $creado = (new Stock(Database::pdo()))->inicializar((int)$sucursalId, (int)$productoId);
-            $this->flash($creado ? 'Stock inicializado en 0' : 'Ese producto ya tenía stock');
-        } catch (PDOException $e) {
-            $this->flash('No se pudo inicializar: ' . $this->mensaje($e), 'err');
-        }
-        $this->redirect('stock/index');
-    }
 }

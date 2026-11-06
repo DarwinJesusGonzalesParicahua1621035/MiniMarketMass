@@ -7,17 +7,21 @@ class StockRepository extends Repository
         FROM stock st JOIN sucursal s ON s.id = st.sucursal_id
         JOIN producto p ON p.id = st.producto_id ORDER BY s.nombre, p.nombre';
 
-    public function resumen(?int $sucursalId = null): array
+    // Todo el inventario: una fila por producto activo en cada sucursal donde se maneja.
+    public function inventario(): array
     {
-        $sql = 'SELECT st.sucursal_id, st.producto_id, s.nombre AS sucursal,
-                p.codigo_barras, p.nombre AS producto, p.unidad, st.cantidad
-                FROM stock st JOIN sucursal s ON s.id = st.sucursal_id
-                JOIN producto p ON p.id = st.producto_id '
-             . ($sucursalId ? 'WHERE st.sucursal_id = ? ' : '')
-             . 'ORDER BY s.nombre, p.nombre';
-        $s = $this->db()->prepare($sql);
-        $s->execute($sucursalId ? [$sucursalId] : []);
-        return $s->fetchAll();
+        return $this->db()->query(
+            'SELECT st.sucursal_id, s.nombre AS sucursal, p.id AS producto_id, p.codigo_barras,
+                    p.nombre AS producto, c.nombre AS categoria, p.unidad, p.precio, st.cantidad,
+                    (SELECT MAX(m.fecha) FROM movimiento_stock m
+                      WHERE m.sucursal_id = st.sucursal_id AND m.producto_id = st.producto_id) AS ultimo
+             FROM stock st
+             JOIN sucursal s ON s.id = st.sucursal_id
+             JOIN producto p ON p.id = st.producto_id
+             JOIN categoria c ON c.id = p.categoria_id
+             WHERE p.activo = 1
+             ORDER BY s.nombre, p.nombre'
+        )->fetchAll();
     }
 
     public function historial(?int $sucursalId = null, ?string $tipo = null, int $limite = 200): array
@@ -38,45 +42,33 @@ class StockRepository extends Repository
         return $s->fetchAll();
     }
 
-    // Combinaciones sucursal-producto que ya tienen stock (valor "sucursal-producto").
-    public function combinaciones(): array
-    {
-        $o = [];
-        $q = "SELECT st.sucursal_id, st.producto_id,
-              CONCAT(s.nombre, ' · ', p.nombre, ' (', st.cantidad, ' ', p.unidad, ')') AS texto
-              FROM stock st JOIN sucursal s ON s.id = st.sucursal_id
-              JOIN producto p ON p.id = st.producto_id ORDER BY s.nombre, p.nombre";
-        foreach ($this->db()->query($q) as $r) {
-            $o[$r['sucursal_id'] . '-' . $r['producto_id']] = $r['texto'];
-        }
-        return $o;
-    }
-
-    // Cada combinación sucursal-producto con su cantidad, por separado (para el formulario por pasos).
+    // Productos que se manejan en cada sucursal (solo ellos admiten movimientos), con su categoría.
     public function opcionesStock(): array
     {
         return $this->db()->query(
-            "SELECT st.sucursal_id, s.nombre AS sucursal,
-                    st.producto_id, p.nombre AS producto, p.codigo_barras AS codigo, p.unidad, st.cantidad
+            "SELECT s.id AS sucursal_id, s.nombre AS sucursal,
+                    p.id AS producto_id, p.nombre AS producto, p.codigo_barras AS codigo, p.unidad,
+                    c.id AS categoria_id, c.nombre AS categoria,
+                    st.cantidad
              FROM stock st
              JOIN sucursal s ON s.id = st.sucursal_id
              JOIN producto p ON p.id = st.producto_id
+             JOIN categoria c ON c.id = p.categoria_id
+             WHERE p.activo = 1
              ORDER BY s.nombre, p.nombre"
         )->fetchAll();
     }
 
-    // Productos activos que todavía no tienen fila de stock en alguna sucursal.
-
-    public function faltantes(): array
+    // Motivos escritos antes en movimientos manuales, del más reciente al más antiguo (sin repetir).
+    // Alimentan las sugerencias del campo "Motivo".
+    public function motivosRecientes(int $limite = 30): array
     {
-        return $this->db()->query(
-            "SELECT s.id AS sucursal_id, p.id AS producto_id,
-                    s.nombre AS sucursal, p.nombre AS producto,
-                    CONCAT(s.nombre, ' · ', p.nombre) AS texto
-             FROM sucursal s CROSS JOIN producto p
-             LEFT JOIN stock st ON st.sucursal_id = s.id AND st.producto_id = p.id
-             WHERE p.activo = 1 AND st.producto_id IS NULL
-             ORDER BY s.nombre, p.nombre"
-        )->fetchAll();
+        $q = "SELECT motivo FROM movimiento_stock
+              WHERE motivo IS NOT NULL AND motivo <> '' AND venta_id IS NULL
+              GROUP BY motivo
+              ORDER BY MAX(fecha) DESC, MAX(id) DESC
+              LIMIT " . (int)$limite;
+        return array_map('strval', $this->db()->query($q)->fetchAll(PDO::FETCH_COLUMN));
     }
+
 }

@@ -27,6 +27,7 @@ $var = function ($hoy, $ayer) {
 $vVentas = $var($k['ventas_hoy'], $k['ventas_ayer']);
 $vComp = $var($k['comprobantes'], $k['comprobantes_ayer']);
 ?>
+<link rel="stylesheet" href="<?= Controller::base() ?>/css/dashboard.css">
 <section class="hero">
   <div><h2><?= $saludo ?>, <?= e($nombre) ?>!</h2><p>Aquí tienes el resumen de tu tienda hoy.</p></div>
   <span><?= date('d/m/Y · H:i') ?></span>
@@ -94,17 +95,38 @@ $vComp = $var($k['comprobantes'], $k['comprobantes_ayer']);
 </div>
 
 <div class="grid">
-  <div class="tw">
-    <div class="tools"><h3>Últimas ventas</h3><a class="btn g" href="<?= Controller::url('ventas/index') ?>">Ver todas</a></div>
-    <div class="scroll"><table>
-      <thead><tr><th>Comprobante</th><th>Fecha / Hora</th><th>Sucursal</th><th>Cliente</th><th>Total</th><th>Estado</th></tr></thead>
-      <tbody>
-      <?php foreach ($ultimas as $v): ?>
-        <tr><td><b><?= e($v['comprobante']) ?></b></td><td><?= e($v['fecha']) ?></td><td><?= e($v['sucursal']) ?></td><td><?= e($v['cliente']) ?></td>
-            <td><?= money($v['total']) ?></td><td><?= celda($v['estado'], 'etiqueta') ?></td></tr>
+  <div class="card sb-card"><h3>Sucursales</h3><small>Estado de cajas y asistencia del personal de hoy</small>
+    <div class="sb-grid">
+      <?php foreach ($sedes as $sd):
+          $activa = $sd['abiertas'] > 0;
+          $lblCaja = $sd['cajas'] === 0 ? 'Sin cajas registradas' : $sd['abiertas'] . ' de ' . $sd['cajas'] . ($sd['cajas'] === 1 ? ' caja abierta' : ' cajas abiertas'); ?>
+        <div class="sb <?= $activa ? 'on' : 'off' ?>">
+          <div class="sb-top">
+            <div class="sb-nom"><b><?= e($sd['nombre']) ?></b><small><?= e($sd['direccion']) ?></small></div>
+            <span class="sb-est"><?= $activa ? 'Activa' : 'Cerrada' ?></span>
+          </div>
+          <p class="sb-caja"><?= e($lblCaja) ?></p>
+          <div class="sb-emps">
+            <?php foreach ($sd['empleados'] as $em):
+                $tip = $em['nombre'] . ' · ' . ucfirst(strtolower($em['rol'])) . ' · ' . [
+                    'temprano'  => 'Temprano (' . ($em['entrada'] ? date('H:i', strtotime($em['entrada'])) : '') . ')',
+                    'tarde'     => 'Tarde (' . ($em['entrada'] ? date('H:i', strtotime($em['entrada'])) : '') . ')',
+                    'falta'     => 'Falta',
+                    'pendiente' => 'Sin marcar asistencia',
+                ][$em['clase']]; ?>
+              <span class="sb-chip <?= e($em['clase']) ?>" title="<?= e($tip) ?>"><i></i><?= e($em['nombre']) ?></span>
+            <?php endforeach; ?>
+            <?php if (!$sd['empleados']): ?><small class="sb-vacio">Sin empleados asignados</small><?php endif; ?>
+          </div>
+        </div>
       <?php endforeach; ?>
-      </tbody>
-    </table></div>
+    </div>
+    <ul class="sb-leyenda">
+      <li><span class="sb-chip temprano"><i></i>Temprano</span> hasta 8:30</li>
+      <li><span class="sb-chip tarde"><i></i>Tarde</span> después de 8:30</li>
+      <li><span class="sb-chip pendiente"><i></i>Sin marcar</span> no registró asistencia</li>
+      <li><span class="sb-chip falta"><i></i>Falta</span> registrada por el administrador</li>
+    </ul>
   </div>
   <div class="card"><h3>Alertas y notificaciones</h3>
     <ul class="alertas">

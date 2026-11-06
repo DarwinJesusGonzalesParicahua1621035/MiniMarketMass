@@ -2,33 +2,36 @@
 class AsistenciaController extends CrudController
 {
     protected function config(): array
-    {
-        $r = new AsistenciaRepository();
-        return [
-            'carpeta' => 'asistencia', 'titulo' => 'Asistencia', 'singular' => 'asistencia',
-            'repo' => $r, 'acciones' => ['editar', 'eliminar'],
-            'columnas' => [
-                'id' => ['#'], 'empleado' => ['Empleado'], 'entrada' => ['Entrada'], 'salida' => ['Salida'],
-                'estado' => ['Estado', 'etiqueta'],
-            ],
-            'campos' => [
-                'empleado_id' => ['label' => 'Empleado', 'tipo' => 'select', 'req' => true,
-                                  'opciones' => fn() => $r->pares('SELECT id, nombre FROM empleado ORDER BY nombre')],
-                'entrada'     => ['label' => 'Entrada', 'tipo' => 'datetime-local', 'req' => true],
-                'salida'      => ['label' => 'Salida (opcional)', 'tipo' => 'datetime-local', 'nulo' => true],
-                'estado'      => ['label' => 'Estado', 'tipo' => 'select', 'req' => true,
-                                  'opciones' => ['PRESENTE' => 'PRESENTE', 'TARDANZA' => 'TARDANZA', 'FALTA' => 'FALTA']],
-            ],
-        ];
-    }
-
+{
+    $r = new AsistenciaRepository();
+    return [
+        'carpeta' => 'asistencia', 'titulo' => 'Asistencia', 'singular' => 'asistencia',
+        'repo' => $r,
+        'campos' => [
+            'empleado_id' => ['label' => 'Empleado', 'tipo' => 'select', 'req' => true,
+                              'opciones' => fn() => $r->pares('SELECT id, nombre FROM empleado ORDER BY nombre')],
+            'entrada'     => ['label' => 'Entrada', 'tipo' => 'datetime-local', 'req' => true],
+            'salida'      => ['label' => 'Salida (opcional)', 'tipo' => 'datetime-local', 'nulo' => true],
+            'estado'      => ['label' => 'Estado', 'tipo' => 'select', 'req' => true,
+                              'opciones' => ['AUTO' => 'Automático (según la hora de entrada)', 'FALTA' => 'Falta (no marcó asistencia)']],
+        ],
+    ];
+}
     protected function antes(array $d, int $id): array
     {
         if ($d['entrada'] === '') {
             throw new RuntimeException('la entrada es obligatoria.');
         }
-        if ($d['salida'] !== null && $d['salida'] < $d['entrada']) {
-            throw new RuntimeException('la salida no puede ser anterior a la entrada.');
+        if ($d['estado'] === 'FALTA') {
+            // Falta cargada a mano: no hay entrada real, se guarda a las 00:00:00 y sin salida.
+            $d['entrada'] = substr($d['entrada'], 0, 10) . ' 00:00:00';
+            $d['salida']  = null;
+        } else {
+            if ($d['salida'] !== null && $d['salida'] < $d['entrada']) {
+                throw new RuntimeException('la salida no puede ser anterior a la entrada.');
+            }
+            // Temprano hasta 08:30 · Tarde después de 08:30
+            $d['estado'] = AsistenciaRepository::estadoPorEntrada($d['entrada']);
         }
         return $d;
     }
@@ -39,7 +42,7 @@ class AsistenciaController extends CrudController
         $repo = new AsistenciaRepository();
         $a = $repo->buscar((int)($_POST['id'] ?? 0));
         try {
-            if (!$a || $a['salida'] !== null || $a['estado'] === 'FALTA'
+            if (!$a || $a['salida'] !== null || AsistenciaRepository::sinEntrada($a)
                 || substr($a['entrada'], 0, 10) !== date('Y-m-d')) {
                 throw new RuntimeException('este registro no admite marcar salida.');
             }

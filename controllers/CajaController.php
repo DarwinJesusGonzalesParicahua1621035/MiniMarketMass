@@ -104,12 +104,6 @@ class CajaController extends Controller
         exit;
     }
 
-    public function historial(): void
-    {
-        $this->soloAdmin();
-        $this->redirect('caja/index');
-    }
-
     public function nueva(): void
     {
         $this->soloAdmin();
@@ -135,9 +129,12 @@ class CajaController extends Controller
             $this->volver($id ? ['abrir' => $id] : []);
         }
         $u = Auth::user();
-        if ($u['rol'] === 'CAJERO' && !(new AsistenciaRepository())->deHoy((int)$u['id'])) {
-            $this->flash('No se pudo abrir: primero registra tu asistencia.', 'err');
-            $this->volver();
+        if ($u['rol'] === 'CAJERO') {
+            $asis = (new AsistenciaRepository())->deHoy((int)$u['id']);
+            if (!$asis || $asis['salida']) {
+                $this->flash($asis ? 'No se pudo abrir: ya terminaste tu turno hoy.' : 'No se pudo abrir: primero registra tu asistencia.', 'err');
+                $this->volver();
+            }
         }
         $emp = $u['rol'] === 'ADMINISTRADOR' ? (int)($_POST['empleado_id'] ?? $u['id']) : (int)$u['id'];
         try {

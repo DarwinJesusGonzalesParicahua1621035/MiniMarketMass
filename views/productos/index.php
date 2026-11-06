@@ -58,6 +58,7 @@ ksort($totalCat);
                data-nombre="<?= e($f['nombre']) ?>"
                data-unidad="<?= e($f['unidad']) ?>"
                data-precio="<?= e($f['precio']) ?>"
+               data-asig="<?= e(json_encode((object)($asignaciones[(int)$f['id']] ?? []))) ?>"
                data-txt="<?= e(mb_strtolower($f['nombre'] . ' ' . $f['codigo_barras'])) ?>">
         <div class="prd-top">
           <div class="prd-ico"><?= prdIcono($f['categoria']) ?></div>
@@ -122,6 +123,24 @@ ksort($totalCat);
       </div>
       <div class="pv-campo"><label for="i-act">Estado</label>
         <select class="dr-input" id="i-act" name="activo"><option value="1">Activo</option><option value="0">Inactivo</option></select></div>
+
+      <div class="pv-campo">
+        <label>Sucursales donde se vende <em>(cada una con su propio stock)</em></label>
+        <div class="ps-lista" id="ps-lista">
+          <?php foreach ($sucursales as $sid => $sn): ?>
+            <div class="ps-fila" data-suc="<?= (int)$sid ?>">
+              <label class="ps-chk">
+                <input type="checkbox" name="suc[<?= (int)$sid ?>][on]" value="1">
+                <span><?= e($sn) ?></span>
+              </label>
+              <input class="dr-input ps-ini" type="text" inputmode="numeric" pattern="[0-9]{1,7}" maxlength="7"
+                     name="suc[<?= (int)$sid ?>][stock]" placeholder="Stock inicial" autocomplete="off" disabled>
+              <span class="ps-act"></span>
+            </div>
+          <?php endforeach; ?>
+        </div>
+        <small class="ps-ayuda">El stock inicial solo se pide al agregar la sucursal; después se ajusta con movimientos.</small>
+      </div>
     </div>
     <div class="dr-acciones">
       <button type="button" class="btn g flex" id="dr-cancelar">Cancelar</button>
@@ -184,8 +203,28 @@ ksort($totalCat);
     $('i-unidad').value = c ? d.unidad : '';
     $('i-precio').value = c ? d.precio : '';
     $('i-act').value = c ? d.act : '1';
+    var asig = {};
+    try { asig = c ? JSON.parse(d.asig || '{}') : {}; } catch (e) {}
+    [].slice.call(document.querySelectorAll('#ps-lista .ps-fila')).forEach(function (f) {
+      var chk = f.querySelector('input[type=checkbox]'), ini = f.querySelector('.ps-ini'), act = f.querySelector('.ps-act');
+      var tiene = Object.prototype.hasOwnProperty.call(asig, f.dataset.suc);
+      chk.checked = tiene;
+      ini.value = '';
+      ini.style.display = tiene ? 'none' : '';
+      ini.disabled = tiene || !chk.checked;
+      act.textContent = tiene ? 'Stock actual: ' + (Math.round(asig[f.dataset.suc] * 1000) / 1000) : '';
+      f.classList.toggle('on', chk.checked);
+    });
     abrir(); $('i-nombre').focus();
   }
+  [].slice.call(document.querySelectorAll('#ps-lista .ps-fila')).forEach(function (f) {
+    var chk = f.querySelector('input[type=checkbox]'), ini = f.querySelector('.ps-ini');
+    chk.addEventListener('change', function () {
+      f.classList.toggle('on', chk.checked);
+      if (ini.style.display !== 'none') { ini.disabled = !chk.checked; if (chk.checked) ini.focus(); else ini.value = ''; }
+    });
+    ini.addEventListener('input', function () { ini.value = ini.value.replace(/[^0-9]/g, ''); });
+  });
   $('pr-nuevo').addEventListener('click', function () { ultimo = this; formulario(null); });
   cards.forEach(function (c) {
     c.querySelector('.pr-editar').addEventListener('click', function () { ultimo = this; formulario(c); });

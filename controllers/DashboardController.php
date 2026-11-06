@@ -37,7 +37,7 @@ class DashboardController extends Controller
             'sucursales' => $sucursales,
             'semana'     => $semana,
             'medios'     => $medios,
-            'ultimas'    => $r->ultimas(),
+            'sedes'      => $r->sucursalesHoy(),
             'stockBajo'  => $r->stockBajo(),
             'incidentes' => $r->incidentesAbiertos(),
             'top'        => $r->masVendidos(),

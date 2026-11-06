@@ -4,10 +4,20 @@ $menu = [
     'Operaciones'   => [['ventas', '🧾', 'Ventas'], ['caja', '💵', 'Cajas']],
     'Inventario'    => [['productos', '📦', 'Productos'], ['categorias', '🏷️', 'Categorías'], ['proveedores', '🏭', 'Proveedores'], ['stock', '🗃️', 'Stock']],
     'Personas'      => [['clientes', '👥', 'Clientes'], ['empleados', '🧑‍💼', 'Empleados'], ['asistencia', '🕘', 'Asistencia']],
-    'Configuración' => [['sucursales', '🏬', 'Sucursales'], ['incidentes', '⚠️', 'Incidentes']],
+    'Configuración' => [['sucursales', '🏬', 'Sucursales'], ['incidentes', '⚠️', 'Incidentes'], ['seguridad', '🔐', 'Seguridad']],
 ];
 $actual = explode('/', $_GET['r'] ?? 'dashboard/index')[0];
+<<<<<<< HEAD
 $tema = (isset($_COOKIE['theme']) && $_COOKIE['theme'] === 'dark') ? 'dark' : 'light';
+=======
+
+$seg2fa = false;
+try {
+    $q2 = Database::pdo()->prepare('SELECT totp_activo FROM empleado WHERE id = ?');
+    $q2->execute([$user['id'] ?? 0]);
+    $seg2fa = (bool)$q2->fetchColumn();
+} catch (Throwable $e) {}
+>>>>>>> b96001e111fd6041ebc577a8f1fdc54b3700dd9e
 ?>
 <!DOCTYPE html>
 <html lang="es" data-theme="<?= $tema ?>">
@@ -403,5 +413,15 @@ $tema = (isset($_COOKIE['theme']) && $_COOKIE['theme'] === 'dark') ? 'dark' : 'l
 </script>
 
 <script src="<?= Controller::base() ?>/js/app.js"></script>
+<script>
+(function(){
+  var a=document.querySelector('a[href*="r=seguridad"]'); if(!a) return;
+  if(getComputedStyle(a).display.indexOf('flex')<0){a.style.display='flex';a.style.alignItems='center';}
+  var on=<?= $seg2fa ? 'true' : 'false' ?>, b=document.createElement('span');
+  b.textContent=on?'Activado':'Recomendado';
+  b.style.cssText='margin-left:auto;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;'+(on?'background:#12b76a;color:#fff':'background:#111;color:#ffc400');
+  a.appendChild(b);
+})();
+</script>
 </body>
 </html>

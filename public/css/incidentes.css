@@ -1,0 +1,94 @@
+/* Incidentes (administrador) — prefijo im- para no chocar con .inc-* del módulo Cajero */
+
+/* Pestañas con contador */
+.im-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.im-tab{display:flex;align-items:center;gap:12px;text-align:left;background:#fff;border:2px solid var(--g2);border-radius:14px;padding:14px 16px;font:inherit;color:inherit;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.im-tab:hover{border-color:var(--g3)}
+.im-tab .d{width:10px;height:34px;border-radius:6px;background:var(--g3);flex-shrink:0}
+.im-tab .d.warn{background:var(--y)}.im-tab .d.bad{background:var(--bad)}.im-tab .d.ok{background:var(--ok)}
+.im-tab b{font-size:28px;line-height:1;min-width:26px}
+.im-tab span{font-size:14px;font-weight:600;line-height:1.25}
+.im-tab small{display:block;font-weight:400;font-size:11.5px;color:var(--g4)}
+.im-tab.on{border-color:var(--k);background:var(--k);color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.15)}
+.im-tab.on small{color:#c9ccd3}
+.im-tab:focus-visible{outline:3px solid #ffc40080;outline-offset:2px}
+
+/* Barra de búsqueda y filtros */
+.im-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.im-bar input,.im-bar select{background:#fff;border:1px solid var(--g2);border-radius:12px;padding:11px 14px;font:inherit;outline:none;min-width:0}
+.im-bar input:focus,.im-bar select:focus{border-color:var(--y);box-shadow:0 0 0 3px #ffc40040}
+.im-search{flex:1 1 260px}
+.im-bar select{flex:0 1 225px}
+.im-nuevo{padding:11px 20px;white-space:nowrap}
+
+/* Lista */
+.im-list{display:grid;gap:12px}
+.im-item{display:flex;align-items:flex-start;gap:16px;background:#fff;border:1px solid var(--g2);border-left:6px solid var(--y);border-radius:14px;padding:16px 18px;cursor:pointer;transition:box-shadow .15s}
+.im-item.urg{border-left-color:var(--bad)}
+.im-item.res{border-left-color:var(--ok);background:#fbfdfc}
+.im-item:hover{box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.im-item[hidden]{display:none}
+.im-ic{width:46px;height:46px;border-radius:12px;background:var(--y2);display:grid;place-items:center;font-size:22px;flex-shrink:0}
+.im-item.urg .im-ic{background:#fbe5e5}.im-item.res .im-ic{background:#e3f6ec}
+.im-main{flex:1;min-width:0}
+.im-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:14px}
+.im-meta span:not(.im-badge){color:var(--g4)}
+.im-badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700;margin-left:4px}
+.im-badge.warn{background:#fff3c4;color:#8a6700}.im-badge.bad{background:#fbe5e5;color:var(--bad)}.im-badge.ok{background:#e3f6ec;color:var(--ok)}
+.im-desc{margin:8px 0 10px;font-size:15.5px;line-height:1.45;overflow-wrap:anywhere;white-space:pre-line}
+.im-when{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--g4)}
+.im-when .late{color:var(--bad);font-weight:700}
+.im-acts{display:flex;flex-direction:column;gap:8px;flex-shrink:0;width:160px}
+.im-acts form{display:block}
+.im-acts .btn{width:100%;text-align:center;padding:9px 12px;font-size:14px}
+.btn.im-ok{background:#e3f6ec;color:var(--ok)}.btn.im-ok:hover{background:var(--ok);color:#fff}
+
+/* Vacío */
+.im-vacio{text-align:center;padding:56px 20px;background:#fff;border:1px dashed var(--g2);border-radius:14px;color:var(--g4)}
+.im-vacio[hidden]{display:none}
+.im-vacio-ic{font-size:44px;margin-bottom:8px}
+.im-vacio p{font-size:16px;margin-bottom:14px}
+
+/* Ventana (dialog) */
+.im-dlg{border:0;border-radius:18px;padding:0;width:520px;max-width:calc(100vw - 24px);max-height:calc(100vh - 24px);color:var(--k);box-shadow:0 20px 60px rgba(0,0,0,.35);margin:auto}
+.im-dlg::backdrop{background:rgba(15,17,21,.55)}
+.im-dlg[open]{display:flex;flex-direction:column;animation:imIn .18s ease}
+.im-dlg>form#imForm{display:flex;flex-direction:column;min-height:0;flex:1}
+.im-dlg>form#imDel{display:none}
+@keyframes imIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+.im-dh{display:flex;align-items:center;gap:10px;padding:18px 22px;border-bottom:1px solid var(--g2)}
+.im-dh h2{flex:1;font-size:19px}
+.im-x{border:0;background:var(--g1);border-radius:10px;width:36px;height:36px;font-size:17px;cursor:pointer}
+.im-x:hover{background:var(--y)}
+.im-db{padding:20px 22px;overflow:auto;flex:1}
+.im-campo{display:block;border:0;margin:0 0 18px;padding:0;font-size:14px;font-weight:700;min-width:0}
+.im-campo[hidden]{display:none}
+.im-campo legend,.im-lbl{display:block;padding:0;margin-bottom:8px;font-size:14px;font-weight:700}
+.im-campo input[type=datetime-local],.im-campo select,.im-campo textarea{display:block;width:100%;margin-top:8px;padding:11px 13px;border:1px solid #d1d5db;border-radius:11px;font:inherit;font-weight:400;background:#fff;outline:none}
+.im-campo textarea{resize:vertical;min-height:96px}
+.im-campo input:focus,.im-campo select:focus,.im-campo textarea:focus{border-color:var(--y);box-shadow:0 0 0 3px #ffc40040}
+.im-campo small{display:block;text-align:right;font-weight:400;color:var(--g4);margin-top:4px}
+.im-tipos,.im-seg{display:flex;gap:8px;flex-wrap:wrap}
+.im-tipos label,.im-seg label{position:relative;cursor:pointer}
+.im-tipos input,.im-seg input{position:absolute;opacity:0;width:1px;height:1px;left:50%;top:50%}
+.im-tipos span,.im-seg span{display:inline-block;border:1px solid var(--g2);border-radius:99px;padding:9px 16px;font-size:14px;font-weight:600;background:#fff}
+.im-tipos label:hover span,.im-seg label:hover span{border-color:var(--g3)}
+.im-tipos input:checked+span,.im-seg input:checked+span{background:var(--k);border-color:var(--k);color:var(--y)}
+.im-tipos input:focus-visible+span,.im-seg input:focus-visible+span{box-shadow:0 0 0 3px #ffc40080}
+.im-df{display:flex;align-items:center;gap:10px;padding:14px 22px;border-top:1px solid var(--g2)}
+.im-sp{flex:1}
+.im-df .btn[hidden]{display:none}
+.btn.im-del{background:#fbe5e5;color:var(--bad)}.btn.im-del:hover{background:var(--bad);color:#fff}
+
+@media(max-width:900px){
+  .im-tabs{grid-template-columns:repeat(2,1fr)}
+  .im-item{flex-wrap:wrap}
+  .im-acts{flex-direction:row;width:100%}
+  .im-acts form,.im-acts button{flex:1}
+}
+@media(max-width:560px){
+  .im-bar select,.im-nuevo{flex:1 1 100%}
+  .im-tab{padding:12px}.im-tab b{font-size:24px}
+  .im-dlg{width:100vw;max-width:100vw;max-height:100vh;height:100vh;border-radius:0}
+}
+@media(prefers-reduced-motion:reduce){.im-dlg[open]{animation:none}}
