@@ -1,35 +1,54 @@
-document.addEventListener("DOMContentLoaded", () => {
-    // 1. ELIMINAR el botón que el main.php puso dentro del perfil
-    const botonViejo = document.getElementById('theme-toggle');
-    if (botonViejo) {
-        botonViejo.remove(); // Lo borramos del HTML
-    }
-
-    // 2. CREAR el botón que queremos en la esquina superior derecha
-    let btnEsquina = document.createElement('button');
-    btnEsquina.id = 'btn-esquina';
-    // Estilos para que flote en la esquina sin fondo blanco
-    btnEsquina.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 99999; font-size: 24px; background: transparent; border: none; cursor: pointer; outline: none;';
-    document.body.appendChild(btnEsquina);
-
-    // 3. Lógica del modo oscuro
-    if(localStorage.getItem('theme') === 'dark') {
+// ==========================================
+// 1. APLICAR EL TEMA LO ANTES POSIBLE (ANTI-FLASH)
+// ==========================================
+(function() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
-        btnEsquina.innerHTML = '☀️';
     } else {
-        btnEsquina.innerHTML = '🌙';
+        document.documentElement.removeAttribute('data-theme');
+    }
+})();
+
+// ==========================================
+// 2. CUANDO EL DOM ESTÉ LISTO, CREAR EL BOTÓN Y LA LÓGICA
+// ==========================================
+document.addEventListener("DOMContentLoaded", () => {
+    // Inyectar CSS
+    if (!document.getElementById('dark-mode-css')) {
+        const link = document.createElement('link');
+        link.id = 'dark-mode-css';
+        link.rel = 'stylesheet';
+        link.href = '/public/css/dark-mode.css';
+        document.head.appendChild(link);
     }
 
-    btnEsquina.addEventListener('click', function() {
-        let t = document.documentElement.getAttribute('data-theme');
-        if(t === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'light');
-            localStorage.setItem('theme', 'light'); 
-            btnEsquina.innerHTML = '🌙';
+    // Crear el Botón
+    let btn = document.getElementById('btn-dark-mode');
+    if (!btn) {
+        btn = document.createElement('button');
+        btn.id = 'btn-dark-mode';
+        btn.title = "Cambiar tema";
+        btn.style.cssText = 'position:fixed; top:20px; right:20px; z-index:999999; font-size:20px; background: #B8860B; border: 2px solid #000; border-radius: 50%; cursor:pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5);';
+        document.body.appendChild(btn);
+    }
+
+    // Sincronizar icono
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    btn.innerHTML = (currentTheme === 'dark') ? '☀️' : '🌙';
+
+    // Lógica del clic
+    btn.addEventListener('click', () => {
+        let isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        
+        if (isDark) {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'light');
+            btn.innerHTML = '🌙';
         } else {
             document.documentElement.setAttribute('data-theme', 'dark');
-            localStorage.setItem('theme', 'dark'); 
-            btnEsquina.innerHTML = '☀️';
+            localStorage.setItem('theme', 'dark');
+            btn.innerHTML = '☀️';
         }
     });
 });

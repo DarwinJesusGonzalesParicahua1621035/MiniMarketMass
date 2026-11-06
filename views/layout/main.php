@@ -22,7 +22,7 @@ try {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?= e($titulo ?? 'Panel') ?> · Tiendas Mass</title>
 <link rel="stylesheet" href="<?= Controller::base() ?>/css/app.css">
-</head>
+<script>if(localStorage.getItem("theme")==="dark"){document.documentElement.setAttribute("data-theme","dark");}</script></head>
 <body>
 <aside id="aside">
   <div class="logo"><i>M</i><div>Tiendas Mass</div></div>
@@ -54,5 +54,7 @@ try {
   a.appendChild(b);
 })();
 </script>
+<!-- ÚNICA LÍNEA AGREGADA: CARGA EL JS DEL MODO OSCURO -->
+<script src="/public/js/theme-toggle.js"></script>
 </body>
 </html>

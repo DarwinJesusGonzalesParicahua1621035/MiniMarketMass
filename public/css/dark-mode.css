@@ -1,29 +1,206 @@
-/* Estilo del botón de la luna en el header */
-#theme-toggle {
-    margin-left: auto; /* Lo empuja a la derecha */
-    background: #F3F4F6;
-    border: 1px solid #ccc;
-    border-radius: 50%; /* Lo hace un círculo perfecto */
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    transition: background 0.3s, transform 0.2s;
+/* ========================================================
+   MODO OSCURO COMPLETO - TIENDAS MASS
+======================================================== */
+
+/* 1. FONDO GENERAL */
+html[data-theme="dark"] body,
+html[data-theme="dark"] main,
+html[data-theme="dark"] .main-content,
+html[data-theme="dark"] .content,
+html[data-theme="dark"] .wrapper {
+    background-color: #0D0F12 !important;
+    color: #F1F3F5 !important;
 }
 
-#theme-toggle:hover {
-    transform: scale(1.1);
+/* 2. ELIMINAR FONDOS BLANCOS INTERNOS */
+html[data-theme="dark"] main div,
+html[data-theme="dark"] main section,
+html[data-theme="dark"] main article,
+html[data-theme="dark"] main form {
+    background-color: transparent !important;
+}
+
+/* 3. MENÚ LATERAL (SIDEBAR) */
+html[data-theme="dark"] #aside,
+html[data-theme="dark"] #aside.sidebar,
+html[data-theme="dark"] aside#aside {
+    background-color: #14171C !important; 
+    background: #14171C !important;
+    border-right: 1px solid #2A303A !important;
+}
+html[data-theme="dark"] #aside .logo,
+html[data-theme="dark"] #aside .rol-top,
+html[data-theme="dark"] #aside h6,
+html[data-theme="dark"] #aside a {
+    color: #F1F3F5 !important;
+}
+html[data-theme="dark"] #aside h6 { color: #9AA3AF !important; }
+html[data-theme="dark"] #aside a:hover { background-color: #1D222A !important; }
+html[data-theme="dark"] #aside a.on { background-color: #2A303A !important; color: #B8860B !important; }
+html[data-theme="dark"] #aside .me { background-color: #1D222A !important; border: 1px solid #2A303A !important; }
+
+/* 4. TARJETAS Y CONTENEDORES PRINCIPALES */
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .tw,
+html[data-theme="dark"] .kp,
+html[data-theme="dark"] .emp-card,
+html[data-theme="dark"] .pv-item,
+html[data-theme="dark"] .cat-item,
+html[data-theme="dark"] .producto,
+html[data-theme="dark"] .prd-card,
+html[data-theme="dark"] .item-producto,
+html[data-theme="dark"] dialog,
+html[data-theme="dark"] .modal-content,
+html[data-theme="dark"] .modal-box,
+html[data-theme="dark"] .drawer,
+html[data-theme="dark"] .panel,
+html[data-theme="dark"] .cat-info {
+    background-color: #161A20 !important;
+    border: 1px solid #2A303A !important;
+    color: #F1F3F5 !important;
+}
+
+/* 5. TEXTOS GENERALES */
+html[data-theme="dark"] h1, h2, h3, b { color: #F1F3F5 !important; }
+html[data-theme="dark"] p, small, span { color: #9AA3AF !important; }
+
+/* 6. TABLAS */
+html[data-theme="dark"] table th { background-color: #1A1E25 !important; color: #F1F3F5 !important; border-color: #2A303A !important; }
+html[data-theme="dark"] table td { color: #F1F3F5 !important; border-color: #2A303A !important; }
+html[data-theme="dark"] table tr:hover td { background-color: #1D222A !important; }
+
+/* 7. INPUTS */
+html[data-theme="dark"] input, select, textarea {
+    background-color: #1D222A !important;
+    color: #F1F3F5 !important;
+    border: 1px solid #2A303A !important;
+}
+
+/* 8. BOTONES Y AMARILLOS */
+html[data-theme="dark"] .btn, button {
+    background-color: #2A303A !important;
+    color: #F1F3F5 !important;
+    border: 1px solid #3A404A !important;
+}
+html[data-theme="dark"] .btn.y, button.btn-primary, .tag.y, .badge.y {
+    background-color: #B8860B !important;
+    color: #111318 !important;
+}
+html[data-theme="dark"] .tag, .badge {
+    background-color: rgba(184, 134, 11, 0.2) !important;
+    color: #D4A017 !important;
+    border: 1px solid rgba(184, 134, 11, 0.4) !important;
+}
+html[data-theme="dark"] .tag.ok, .badge.ok {
+    background-color: rgba(52, 211, 153, 0.15) !important;
+    color: #34D399 !important;
+}
+
+/* 9. CAZADOR DE BLANCOS EN LÍNEA */
+html[data-theme="dark"] *[style*="background-color: white"],
+html[data-theme="dark"] *[style*="background-color: #fff"],
+html[data-theme="dark"] *[style*="background: white"],
+html[data-theme="dark"] *[style*="background: #fff"] {
+    background-color: #161A20 !important;
+    color: #F1F3F5 !important;
+}
+
+/* 10. CONTENEDORES ESPECÍFICOS (Categorías) */
+html[data-theme="dark"] .tw,
+html[data-theme="dark"] .tw > div,
+html[data-theme="dark"] .cat-grid,
+html[data-theme="dark"] .categorias-container,
+html[data-theme="dark"] .lista-categorias {
+    background-color: #0D0F12 !important;
+    border-color: #2A303A !important;
+}
+html[data-theme="dark"] .cat-grid .cat-item,
+html[data-theme="dark"] .tw .cat-item {
+    background-color: #161A20 !important;
+    border: 1px solid #2A303A !important;
+}
+
+/* 11. PANEL DE FILTROS DE VENTAS */
+html[data-theme="dark"] .vt-filters,
+html[data-theme="dark"] .vt-filters *,
+html[data-theme="dark"] form.vt-filters {
+    background-color: #161A20 !important;
+    color: #F1F3F5 !important;
+    border-color: #2A303A !important;
+}
+html[data-theme="dark"] .vt-filters .vt-lb,
+html[data-theme="dark"] .vt-filters label {
+    color: #9AA3AF !important;
+}
+html[data-theme="dark"] .vt-filters .vt-opt,
+html[data-theme="dark"] .vt-filters button {
+    background-color: #1D222A !important;
+    color: #F1F3F5 !important;
+    border: 1px solid #3A404A !important;
+}
+html[data-theme="dark"] .vt-filters .vt-opt.on,
+html[data-theme="dark"] .vt-filters button.on {
+    background-color: #B8860B !important;
+    color: #111318 !important;
+}
+
+/* 12. SCROLLBAR OSCURO */
+html[data-theme="dark"] ::-webkit-scrollbar { width: 10px; height: 10px; }
+html[data-theme="dark"] ::-webkit-scrollbar-track { background: #0D0F12 !important; }
+html[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #2A303A !important; border-radius: 5px; }
+html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: #B8860B !important; }
+
+/* ========================================================
+   MODO CLARO FORZADO (Para cuando se quita data-theme="dark")
+   Esto asegura que todo vuelva a su color original.
+======================================================== */
+
+/* Forzamos el fondo y textos del menú lateral al color original */
+html:not([data-theme="dark"]) #aside,
+html:not([data-theme="dark"]) #aside.sidebar,
+html:not([data-theme="dark"]) aside#aside {
+    background-color: #FFC400 !important; 
     background: #FFC400 !important;
-    color: #111;
+    border-right: 1px solid #E5E7EB !important;
 }
+html:not([data-theme="dark"]) #aside a { color: #111318 !important; }
+html:not([data-theme="dark"]) #aside a.on { background-color: #111318 !important; color: #FFC400 !important; }
+html:not([data-theme="dark"]) #aside h6 { color: #111318 !important; }
 
-/* Ajuste para cuando esté en modo oscuro */
-[data-theme="dark"] #theme-toggle {
-    background: #1D222A;
-    border-color: #2A303A;
-    color: #F1F3F5;
+/* Forzamos fondos y textos de tarjetas y contenedores generales */
+html:not([data-theme="dark"]) .card,
+html:not([data-theme="dark"]) .tw,
+html:not([data-theme="dark"]) .kp,
+html:not([data-theme="dark"]) .emp-card,
+html:not([data-theme="dark"]) .pv-item,
+html:not([data-theme="dark"]) .cat-item,
+html:not([data-theme="dark"]) .producto,
+html:not([data-theme="dark"]) .prd-card,
+html:not([data-theme="dark"]) .item-producto,
+html:not([data-theme="dark"]) .modal-content,
+html:not([data-theme="dark"]) .drawer,
+html:not([data-theme="dark"]) .panel,
+html:not([data-theme="dark"]) .cat-info {
+    background-color: #FFFFFF !important;
+    border: 1px solid #E5E7EB !important;
+    color: #111318 !important;
+}
+/* Forzamos textos generales */
+html:not([data-theme="dark"]) h1, 
+html:not([data-theme="dark"]) h2, 
+html:not([data-theme="dark"]) h3, 
+html:not([data-theme="dark"]) b { color: #111318 !important; }
+html:not([data-theme="dark"]) p, 
+html:not([data-theme="dark"]) small, 
+html:not([data-theme="dark"]) span { color: #6B7280 !important; }
+
+/* Forzamos tablas y inputs al modo claro */
+html:not([data-theme="dark"]) table th { background-color: #F3F4F6 !important; color: #111318 !important; }
+html:not([data-theme="dark"]) table td { color: #111318 !important; }
+html:not([data-theme="dark"]) input, 
+html:not([data-theme="dark"]) select, 
+html:not([data-theme="dark"]) textarea {
+    background-color: #FFFFFF !important;
+    color: #111318 !important;
+    border: 1px solid #E5E7EB !important;
 }
