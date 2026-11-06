@@ -39,13 +39,11 @@ Cómo trabajar:
 
 TXT;
 
+    // El chat ahora es un panel flotante (views/asistente/_flotante.php, incluido en el layout).
+    // Si alguien entra a la URL antigua, se le manda al resumen.
     public function index(): void
     {
-        $this->render('asistente/index', [
-            'titulo' => 'Asistente IA',
-            'listo'  => Gemini::disponible(),
-            'url'    => self::url('asistente/preguntar'),
-        ]);
+        $this->redirect('dashboard/index');
     }
 
     // Recibe la pregunta (POST) y responde en JSON: {ok, respuesta} o {ok:false, error}

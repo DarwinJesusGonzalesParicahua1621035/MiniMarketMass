@@ -1,6 +1,6 @@
 <?php
 $menu = [
-    'General'       => [['dashboard', '📊', 'Resumen'], ['asistente', '🤖', 'Asistente IA']],
+      'General'       => [['dashboard', '📊', 'Resumen']],
     'Operaciones'   => [['ventas', '🧾', 'Ventas'], ['caja', '💵', 'Cajas']],
     'Inventario'    => [['productos', '📦', 'Productos'], ['categorias', '🏷️', 'Categorías'], ['proveedores', '🏭', 'Proveedores'], ['stock', '🗃️', 'Stock']],
     'Personas'      => [['clientes', '👥', 'Clientes'], ['empleados', '🧑‍💼', 'Empleados'], ['asistencia', '🕘', 'Asistencia']],
@@ -43,6 +43,7 @@ try {
   <?php if ($flash): ?><div class="flash <?= $flash[0] === 'err' ? 'err' : '' ?>"><?= e($flash[1]) ?></div><?php endif; ?>
   <?= $contenido ?>
 </main>
+  <?php if (($user['rol'] ?? '') === 'ADMINISTRADOR') require ROOT . '/views/asistente/_flotante.php'; ?>
 <script src="<?= Controller::base() ?>/js/app.js"></script>
 <script>
 (function(){
